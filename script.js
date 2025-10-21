@@ -793,19 +793,23 @@
       proximityObserver.observe(video);
   });
   
-  // Start loading first video immediately, then rest in background
-  // Use requestIdleCallback for better performance, fallback to immediate
-  if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
-          console.log('🚀 Starting first video load (idle callback)');
-          preloadFirstVideoThenRest();
-      }, { timeout: 100 });
-  } else {
-      setTimeout(() => {
-          console.log('🚀 Starting first video load (immediate)');
-          preloadFirstVideoThenRest();
-      }, 100); // Reduced to 100ms for faster start
-  }
+  // CRITICAL FIX: Start video loading AFTER the window.onload event
+  // This ensures the browser's loading bar completes before we initiate heavy downloads.
+  window.onload = () => {
+    // Start loading first video immediately, then rest in background
+    // Use requestIdleCallback for better performance, fallback to immediate
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+            console.log('🚀 Starting first video load (idle callback)');
+            preloadFirstVideoThenRest();
+        }, { timeout: 100 });
+    } else {
+        setTimeout(() => {
+            console.log('🚀 Starting first video load (immediate)');
+            preloadFirstVideoThenRest();
+        }, 100); // Reduced to 100ms for faster start
+    }
+  };
 
   // Experience card expand/collapse functionality
   const experienceCards = document.querySelectorAll('[data-experience-card]');
