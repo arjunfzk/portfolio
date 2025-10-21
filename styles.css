@@ -57,7 +57,7 @@ html {
 
 body {
   margin: 0;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--text);
   background: radial-gradient(ellipse 150% 120% at 50% -10%, #2a4a6f 0%, #1e3a5f 20%, #142d4f 45%, #0f1a2e 65%, #0a0f1a 85%, #0f172a 100%);
   background-attachment: fixed;
@@ -417,6 +417,8 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--border);
   position: relative;
   transition: all 0.4s var(--ease-2);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Enhanced video container when card is in focus */
@@ -467,30 +469,116 @@ a { color: inherit; text-decoration: none; }
 /* Landscape video container */
 .project-landscape .project-video-container {
   width: 100%;
-  max-height: 480px;
+  max-height: 540px;
+}
+
+.project-landscape .project-video {
   aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #000;
 }
 
 /* Portrait video container */
 .project-portrait .project-video-container {
   flex: 0 0 280px;
   width: 280px;
+  max-height: 560px;
+}
+
+.project-portrait .project-video {
   aspect-ratio: 9 / 16;
-  max-height: 500px;
 }
 
 .project-video {
   width: 100%;
-  height: 100%;
+  height: auto;
+  flex: 1;
   object-fit: cover;
   display: block;
+  min-height: 0;
 }
 
-/* Landscape videos should contain to show full content */
-.project-landscape .project-video {
-  object-fit: contain;
-  background: #000;
+/* Video speed banner */
+.video-speed-banner {
+  position: relative;
+  flex-shrink: 0;
+  padding: 14px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.2) 0%,
+    rgba(236, 72, 153, 0.15) 50%,
+    rgba(15, 23, 42, 0.9) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  z-index: 15;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-top: 1px solid rgba(168, 85, 247, 0.4);
+  box-shadow:
+    0 -4px 12px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(168, 85, 247, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(236, 72, 153, 0.3);
 }
+
+/* Enhanced shine effect */
+.video-speed-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(168, 85, 247, 0.1) 30%,
+    rgba(236, 72, 153, 0.08) 50%,
+    rgba(168, 85, 247, 0.1) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.video-speed-banner-line1 {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(168, 85, 247, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.03em;
+  margin: 0;
+  line-height: 1.4;
+  position: relative;
+}
+
+.video-speed-banner-line2 {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #f8fafc;
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.02em;
+  margin: 0;
+  line-height: 1.4;
+  position: relative;
+}
+
+/* Portrait videos need smaller banner text */
+.project-portrait .video-speed-banner-line1 {
+  font-size: 0.75rem;
+}
+
+.project-portrait .video-speed-banner-line2 {
+  font-size: 0.65rem;
+}
+
+/* Landscape videos already styled above */
 
 /* === CSS FOR THE "VALIDATED EXPERTISE" SECTION === */
 
@@ -503,14 +591,14 @@ a { color: inherit; text-decoration: none; }
 /* Use same sizing as other landscape projects */
 .validated-expertise-card .project-video-container {
   width: 100%;
-  max-height: 480px; /* Same as other landscape projects */
-  aspect-ratio: 16 / 9;
+  max-height: 540px;
 }
 
 /* This ensures the landscape video displays correctly without being cropped */
 .validated-expertise-card .project-video {
+  aspect-ratio: 16 / 9;
   object-fit: contain; /* This is crucial for showing the full dashboard */
-  background: #000;      /* Provides black bars for letterboxing */
+  background: #000;    /* Provides black bars for letterboxing */
 }
 
 /* This styles the new performance metrics list */
@@ -742,7 +830,21 @@ a { color: inherit; text-decoration: none; }
   display: flex; flex-direction: column;
   align-items: center; gap: 24px;
 }
-.contact-card h2 { max-width: 20ch; }
+.contact-card h2 { 
+  max-width: 100%; 
+  line-height: 1.2;
+}
+.contact-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+.contact-copy p {
+  text-align: left;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
 .contact-actions { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; }
 
 .site-footer {
@@ -774,6 +876,8 @@ a { color: inherit; text-decoration: none; }
     width: 100%;
     max-width: 400px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
   }
 }
 @media (max-width: 768px) {
@@ -781,15 +885,97 @@ a { color: inherit; text-decoration: none; }
     gap: 40px;
   }
   
+  .project-video-container {
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    overflow: hidden !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  
+  .project-video {
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    display: block !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    z-index: 1;
+  }
+  
+  .video-speed-banner {
+    position: relative !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    padding: 10px 12px;
+    margin: 0 !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    z-index: 2 !important;
+    order: 2;
+  }
+  
   .project-landscape .project-video-container {
-    max-height: 300px;
+    max-height: none;
+    min-height: auto;
+  }
+  
+  .project-landscape .project-video {
+    max-height: none !important;
+    height: auto !important;
+    order: 1;
   }
   
   .project-portrait .project-video-container {
     flex: 0 0 auto;
     width: 100%;
     max-width: 300px;
-    max-height: 450px;
+    max-height: none;
+    min-height: auto;
+  }
+  
+  .project-portrait .project-video {
+    max-height: none !important;
+    height: auto !important;
+    order: 1;
+  }
+  
+  /* Ensure loading overlay doesn't interfere with banner */
+  .video-loading-overlay {
+    position: absolute !important;
+    z-index: 3 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    pointer-events: none;
+  }
+  
+  .video-loading-overlay.visible {
+    pointer-events: auto;
+  }
+  
+  .video-speed-banner-line1 {
+    font-size: 0.72rem;
+  }
+  
+  .video-speed-banner-line2 {
+    font-size: 0.62rem;
+  }
+  
+  /* Further reduction for portrait videos on mobile */
+  .project-portrait .video-speed-banner-line1 {
+    font-size: 0.68rem;
+  }
+  
+  .project-portrait .video-speed-banner-line2 {
+    font-size: 0.58rem;
   }
   
   .site-header { top: 16px; padding: 0; }
@@ -816,6 +1002,22 @@ a { color: inherit; text-decoration: none; }
   .mobile-nav-open .hamburger-btn .line::before { transform: rotate(45deg); }
   .mobile-nav-open .hamburger-btn .line::after { transform: rotate(-45deg); }
   
+  .mobile-nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 0.3s var(--ease-2);
+  }
+  
+  .mobile-nav-open .mobile-nav-overlay {
+      display: block;
+      opacity: 1;
+  }
+  
   .mobile-nav {
       display: flex; flex-direction: column; justify-content: center;
       align-items: center; gap: 40px;
@@ -823,8 +1025,41 @@ a { color: inherit; text-decoration: none; }
       background: var(--bg);
       transform: translateX(100%);
       transition: transform 0.5s var(--ease-2);
+      padding: 40px 20px;
   }
+  
   .mobile-nav-open .mobile-nav { transform: translateX(0); }
+  
+  .mobile-nav-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-2);
+      z-index: 1001;
+  }
+  
+  .mobile-nav-close:hover {
+      background: rgba(30, 41, 59, 1);
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: rotate(90deg);
+      box-shadow: 0 0 20px rgba(6, 214, 160, 0.3);
+  }
+  
+  .mobile-nav-close svg {
+      width: 22px;
+      height: 22px;
+  }
   .mobile-nav .nav-links {
       display: flex; flex-direction: column; align-items: center;
       font-size: 1.5rem; gap: 2rem;
@@ -1110,6 +1345,11 @@ section[id] {
   border: none;
   background: #ffffff;
   display: block;
+  /* Enable smooth scrolling and touch interaction */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Allow iframe content to be zoomable on mobile */
+  touch-action: manipulation;
 }
 
 /* Page Controls */
@@ -1242,6 +1482,16 @@ section[id] {
   
   .resume-viewer-container {
     background: #ffffff;
+    /* Enable touch scrolling and zooming on mobile */
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .resume-pdf-iframe-fallback {
+    /* Mobile-specific: ensure full viewport usage and touch support */
+    min-height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .resume-page-controls {

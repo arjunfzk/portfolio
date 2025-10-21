@@ -28,8 +28,29 @@
       const commandToType = "./introduce.sh";
       const terminalBody = document.querySelector('.terminal-body');
       
-      // New text lines
-      const texts = [
+      // Detect mobile device
+      const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      // Mobile version - more concise
+      const mobileTexts = [
+          "Hey, I'm Arjun.",
+          "I build revenue-generating AI products, solo and end-to-end.",
+          "",
+          "// Live Portfolio:",
+          "• 10+ Production iOS Apps",
+          "• 4 with Agentic Backends (RAG & Multi-Step Reasoning)",
+          "",
+          "// Core Experience:",
+          "• 1.5+ years building products from scratch solo.",
+          "• 3.5+ years as a Data Scientist at a Startup.",
+          "",
+          "Proven in startup & solo. Ready for enterprise scale.",
+          "",
+          "↓ Scroll to see the apps in action ↓"
+      ];
+      
+      // Desktop version - detailed
+      const desktopTexts = [
           "Hey, I'm Arjun.",
           "",
           "I build AI products that generate revenue. Solo. End-to-end.",
@@ -48,6 +69,9 @@
           "I've proven the model solo. Now, I want to tackle challenges at a scale that's impossible alone.",
           "↓ Scroll to see the apps in action ↓"
       ];
+      
+      // Choose the appropriate text array based on device
+      const texts = isMobile ? mobileTexts : desktopTexts;
 
       // Pre-calculate height and width by rendering all text invisibly
       const preCalculateHeight = () => {
@@ -61,7 +85,9 @@
           texts.forEach((text, index) => {
               outputParas[index].textContent = text;
               // Apply section-header class for proper styling calculation
-              if (text === "Live Now:" || text === "Background:" || text === "What that means:" || text === "↓ Scroll to see the apps in action ↓") {
+              if (text === "Live Now:" || text === "Background:" || text === "What that means:" || 
+                  text === "// Live Portfolio:" || text === "// Core Experience:" || 
+                  text === "↓ Scroll to see the apps in action ↓") {
                   outputParas[index].classList.add('section-header');
               }
           });
@@ -81,7 +107,7 @@
           finalCursorLine.style.display = 'none';
       };
 
-      const typewriter = (element, text, onComplete, speed = 20) => {
+      const typewriter = (element, text, onComplete, speed = 10) => {
           let i = 0;
           element.textContent = '';
           const interval = setInterval(() => {
@@ -91,10 +117,12 @@
               } else {
                   clearInterval(interval);
                   // Add section-header class to specific headers
-                  if (text === "Live Now:" || text === "Background:" || text === "What that means:" || text === "↓ Scroll to see the apps in action ↓") {
+                  if (text === "Live Now:" || text === "Background:" || text === "What that means:" || 
+                      text === "// Live Portfolio:" || text === "// Core Experience:" || 
+                      text === "↓ Scroll to see the apps in action ↓") {
                       element.classList.add('section-header');
                   }
-                  if (onComplete) setTimeout(onComplete, 200); // Shorter delay between lines
+                  if (onComplete) setTimeout(onComplete, 50); // Faster delay between lines
               }
           }, speed);
       };
@@ -116,8 +144,8 @@
               commandCursor.style.display = 'none';
               outputEl.style.visibility = 'visible';
               typeLinesSequentially(); // Start typing the output lines
-          }, 80);
-      }, 1000);
+          }, 30);
+      }, 500);
   }
 
   const revealObserver = new IntersectionObserver((entries) => {
@@ -160,10 +188,17 @@
   const hamburgerBtn = document.querySelector('.hamburger-btn');
   const mobileNav = document.querySelector('.mobile-nav');
   const mobileNavLinks = mobileNav.querySelectorAll('a');
+  const mobileNavClose = document.querySelector('.mobile-nav-close');
+  const mobileNavOverlay = document.querySelector('.mobile-nav-overlay');
   
   const toggleMobileNav = () => {
       const isOpen = document.body.classList.toggle('mobile-nav-open');
       hamburgerBtn.setAttribute('aria-expanded', isOpen);
+  };
+  
+  const closeMobileNav = () => {
+      document.body.classList.remove('mobile-nav-open');
+      hamburgerBtn.setAttribute('aria-expanded', 'false');
   };
 
   if (hamburgerBtn) {
@@ -171,273 +206,457 @@
       mobileNavLinks.forEach(link => {
           link.addEventListener('click', () => {
               if (document.body.classList.contains('mobile-nav-open')) {
-                  toggleMobileNav();
+                  closeMobileNav();
               }
           });
       });
   }
-
-  // Video autoplay, preloading, and loading indicator management
-  const projectVideos = document.querySelectorAll('[data-project-video]');
-  const videoLoadingStates = new Map(); // Track loading state of each video
   
-  // Initialize loading overlays for all videos
+  // Close button in mobile nav
+  if (mobileNavClose) {
+      mobileNavClose.addEventListener('click', closeMobileNav);
+  }
+  
+  // Close when clicking overlay
+  if (mobileNavOverlay) {
+      mobileNavOverlay.addEventListener('click', closeMobileNav);
+  }
+
+  // ========================================
+  // ENHANCED VIDEO MANAGEMENT SYSTEM
+  // Optimized for buttery-smooth mobile playback
+  // ========================================
+  
+  const projectVideos = document.querySelectorAll('[data-project-video]');
+  
+  // Comprehensive video state management
+  const videoStates = new Map();
+  
+  // Track user interaction - PERSISTENT across page lifecycle
+  let userHasInteracted = false;
+  let interactionTimestamp = 0;
+  
+  // Video state machine
+  const VIDEO_STATES = {
+    IDLE: 'idle',
+    LOADING: 'loading',
+    READY: 'ready',
+    PLAYING: 'playing',
+    BUFFERING: 'buffering',
+    PAUSED: 'paused',
+    ERROR: 'error'
+  };
+  
+  // Initialize state for each video
+  projectVideos.forEach(video => {
+    const index = parseInt(video.getAttribute('data-video-index'));
+    videoStates.set(video, {
+      state: VIDEO_STATES.IDLE,
+      index: index,
+      playAttempts: 0,
+      lastPlayAttempt: 0,
+      isPreloaded: false,
+      hasEnoughData: false,
+      isInViewport: false,
+      retryTimeout: null
+    });
+  });
+  
+  // Enable autoplay after user interaction - MORE ROBUST
+  const enableAutoplayOnInteraction = () => {
+      userHasInteracted = true;
+      interactionTimestamp = Date.now();
+      console.log('✓ User interaction detected - autoplay enabled globally');
+      
+      // Try to play any visible videos that are ready
+      projectVideos.forEach(video => {
+          const state = videoStates.get(video);
+          if (state.isInViewport && video.paused && state.hasEnoughData) {
+              console.log(`▶ Attempting autoplay for video ${state.index} after interaction`);
+              attemptPlay(video);
+          }
+      });
+  };
+  
+  // Add interaction listeners - PERSISTENT, not once
+  ['touchstart', 'touchend', 'click', 'scroll'].forEach(eventType => {
+      document.addEventListener(eventType, () => {
+          if (!userHasInteracted) {
+              enableAutoplayOnInteraction();
+          }
+      }, { passive: true });
+  });
+  
+  // Handle page visibility changes - IMPROVED
+  document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+          console.log('📱 Page became visible - resuming videos');
+          setTimeout(() => {
+              projectVideos.forEach(video => {
+                  const state = videoStates.get(video);
+                  if (state.isInViewport && video.paused && state.hasEnoughData) {
+                      console.log(`▶ Resuming video ${state.index} after visibility change`);
+                      attemptPlay(video);
+                  }
+              });
+          }, 300); // Longer delay for mobile to settle
+      } else {
+          console.log('📱 Page hidden - pausing all videos');
+          projectVideos.forEach(video => {
+              if (!video.paused) {
+                  video.pause();
+                  const state = videoStates.get(video);
+                  state.state = VIDEO_STATES.PAUSED;
+              }
+          });
+      }
+  });
+  
+  // ========================================
+  // SIMPLIFIED EVENT LISTENERS
+  // Single responsibility, no race conditions
+  // ========================================
+  
   projectVideos.forEach(video => {
       const container = video.closest('.project-video-container');
       const loadingOverlay = container.querySelector('.video-loading-overlay');
-      const videoIndex = parseInt(video.getAttribute('data-video-index'));
+      const state = videoStates.get(video);
       
-      videoLoadingStates.set(video, {
-          isPreloaded: false,
-          isLoading: false,
-          canPlay: false,
-          index: videoIndex
-      });
+      // Update loading overlay based on video state
+      const updateLoadingOverlay = () => {
+          if (!loadingOverlay) return;
+          
+          const shouldShowLoading = 
+              state.state === VIDEO_STATES.LOADING || 
+              state.state === VIDEO_STATES.BUFFERING;
+              
+          if (shouldShowLoading) {
+              loadingOverlay.classList.add('visible');
+          } else {
+              loadingOverlay.classList.remove('visible');
+          }
+      };
       
-      // Show loading indicator when video starts loading
+      // LOADSTART: Video begins loading
       video.addEventListener('loadstart', () => {
-          const state = videoLoadingStates.get(video);
-          state.isLoading = true;
-          if (loadingOverlay) {
-              loadingOverlay.classList.add('visible');
-          }
+          console.log(`📥 Video ${state.index} - loadstart`);
+          state.state = VIDEO_STATES.LOADING;
+          state.hasEnoughData = false;
+          updateLoadingOverlay();
       });
       
-      // Hide loading indicator when video can play
+      // LOADEDDATA: First frame loaded
+      video.addEventListener('loadeddata', () => {
+          console.log(`✓ Video ${state.index} - first frame loaded (readyState: ${video.readyState})`);
+      });
+      
+      // CANPLAY: Some data available (readyState >= 2)
       video.addEventListener('canplay', () => {
-          const state = videoLoadingStates.get(video);
-          state.canPlay = true;
-          state.isLoading = false;
-          if (loadingOverlay) {
-              loadingOverlay.classList.remove('visible');
+          console.log(`✓ Video ${state.index} - can play (readyState: ${video.readyState})`);
+          // Don't mark as ready yet - wait for more data on mobile
+      });
+      
+      // CANPLAYTHROUGH: Enough data to play through (readyState >= 3)
+      video.addEventListener('canplaythrough', () => {
+          console.log(`✓✓ Video ${state.index} - can play through (readyState: ${video.readyState})`);
+          state.hasEnoughData = true;
+          state.state = VIDEO_STATES.READY;
+          updateLoadingOverlay();
+          
+          // Auto-play if in viewport and user has interacted
+          if (state.isInViewport && userHasInteracted && video.paused) {
+              setTimeout(() => attemptPlay(video), 100);
           }
       });
       
-      // Show loading indicator when video is waiting/buffering
-      // Also PAUSE background loading to give this video priority
+      // WAITING: Buffering/stalled
       video.addEventListener('waiting', () => {
-          if (loadingOverlay) {
-              loadingOverlay.classList.add('visible');
-          }
+          console.log(`⏸ Video ${state.index} - buffering`);
+          state.state = VIDEO_STATES.BUFFERING;
+          updateLoadingOverlay();
           
-          // If this is the currently playing video, pause background loading
-          if (video === currentlyPlayingVideo) {
-              isBackgroundLoadingPaused = true;
-              console.log('Active video buffering - pausing background loading');
-          }
+          // Pause background loading to prioritize this video
+          pauseBackgroundLoading(video);
       });
       
-      // Hide loading indicator when video starts playing
-      // Resume background loading since video is playing smoothly
+      // PLAYING: Successfully playing
       video.addEventListener('playing', () => {
-          if (loadingOverlay) {
-              loadingOverlay.classList.remove('visible');
-          }
+          console.log(`▶ Video ${state.index} - playing`);
+          state.state = VIDEO_STATES.PLAYING;
+          state.playAttempts = 0; // Reset attempts
+          updateLoadingOverlay();
           
-          // Track currently playing video
-          currentlyPlayingVideo = video;
-          
-          // Load adjacent videos in background
-          loadAdjacentVideos(video);
-          
-          // Resume background loading after a short delay (ensure video is stable)
+          // Resume background loading after video is stable
           setTimeout(() => {
-              if (video === currentlyPlayingVideo && !video.paused) {
+              if (!video.paused) {
                   resumeBackgroundLoading();
               }
-          }, 2000);
+          }, 3000);
       });
       
-      // Also hide on 'canplaythrough' for smooth experience
-      video.addEventListener('canplaythrough', () => {
-          if (loadingOverlay) {
-              loadingOverlay.classList.remove('visible');
+      // PAUSE: Video paused
+      video.addEventListener('pause', () => {
+          if (state.state !== VIDEO_STATES.BUFFERING) {
+              console.log(`⏸ Video ${state.index} - paused`);
+              state.state = VIDEO_STATES.PAUSED;
+              updateLoadingOverlay();
           }
       });
       
-      // When video is paused, clear it as currently playing
-      video.addEventListener('pause', () => {
-          if (video === currentlyPlayingVideo) {
-              currentlyPlayingVideo = null;
+      // ERROR: Loading error
+      video.addEventListener('error', (e) => {
+          console.error(`❌ Video ${state.index} - error:`, e);
+          state.state = VIDEO_STATES.ERROR;
+          updateLoadingOverlay();
+      });
+      
+      // PROGRESS: Download progress (for monitoring)
+      video.addEventListener('progress', () => {
+          if (video.buffered.length > 0) {
+              const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+              const duration = video.duration;
+              if (duration > 0) {
+                  const percentBuffered = (bufferedEnd / duration) * 100;
+                  console.log(`📊 Video ${state.index} - ${percentBuffered.toFixed(0)}% buffered`);
+              }
           }
       });
   });
   
-  // Smart preloading function - loads a single video
-  const preloadVideo = (video) => {
-      const state = videoLoadingStates.get(video);
+  // ========================================
+  // IMPROVED VIDEO PLAY FUNCTION
+  // Robust retry logic for mobile
+  // ========================================
+  
+  const attemptPlay = async (video) => {
+      const state = videoStates.get(video);
+      const now = Date.now();
       
-      if (state && !state.isPreloaded && !state.isLoading) {
-          state.isPreloaded = true;
-          video.preload = 'auto';
-          video.load();
+      // Prevent rapid retry attempts
+      if (now - state.lastPlayAttempt < 1000) {
+          console.log(`⏭ Video ${state.index} - throttling play attempts`);
+          return;
       }
-  };
-  
-  // Global state for bandwidth management
-  let currentlyPlayingVideo = null;
-  let isBackgroundLoadingPaused = false;
-  let backgroundLoadQueue = [];
-  
-  // Smart video preloader - continuous loading with bandwidth management
-  const preloadAllVideosSequentially = () => {
-      const sortedVideos = Array.from(projectVideos).sort((a, b) => {
-          const stateA = videoLoadingStates.get(a);
-          const stateB = videoLoadingStates.get(b);
-          return (stateA?.index || 0) - (stateB?.index || 0);
-      });
       
-      // Preload first 3 videos aggressively, then continue loading all videos
-      const PRIORITY_COUNT = 3;
-      let currentVideoIndex = 0;
-      let failedVideos = 0;
+      state.lastPlayAttempt = now;
+      state.playAttempts++;
       
-      const loadNextVideo = () => {
-          // Check if background loading is paused due to active video buffering
-          if (isBackgroundLoadingPaused && currentVideoIndex >= PRIORITY_COUNT) {
-              console.log('Background loading paused - active video has priority');
-              backgroundLoadQueue.push(currentVideoIndex);
-              return;
-          }
+      console.log(`▶ Video ${state.index} - play attempt #${state.playAttempts} (readyState: ${video.readyState})`);
+      
+      // Check if video has enough data
+      // CRITICAL: On mobile, we need readyState >= 3 (HAVE_FUTURE_DATA)
+      if (video.readyState < 3) {
+          console.log(`⏳ Video ${state.index} - waiting for more data (current: ${video.readyState}, need: 3)`);
           
-          if (currentVideoIndex >= sortedVideos.length) {
-              console.log(`Video preloading complete: ${sortedVideos.length - failedVideos}/${sortedVideos.length} successful`);
-              return;
-          }
-          
-          const video = sortedVideos[currentVideoIndex];
-          const state = videoLoadingStates.get(video);
-          const isPriority = currentVideoIndex < PRIORITY_COUNT;
-          
-          if (state && !state.isPreloaded) {
-              console.log(`Preloading video ${currentVideoIndex + 1}/${sortedVideos.length} (${isPriority ? 'priority' : 'background'})`);
-              state.isPreloaded = true;
-              
-              // Load ALL videos with 'auto' for continuous preloading
-              video.preload = 'auto';
-              video.load();
-              
-              // Use 'canplaythrough' for priority videos, 'canplay' for background
-              const eventToWaitFor = isPriority ? 'canplaythrough' : 'canplay';
+          // Wait for canplaythrough event with timeout
+          return new Promise((resolve) => {
+              const timeout = setTimeout(() => {
+                  video.removeEventListener('canplaythrough', onReady);
+                  console.log(`⏱ Video ${state.index} - timeout waiting for data`);
+                  
+                  // Try anyway if we have some data and haven't retried too much
+                  if (video.readyState >= 2 && state.playAttempts < 5) {
+                      setTimeout(() => attemptPlay(video), 2000);
+                  }
+                  resolve();
+              }, 5000);
               
               const onReady = () => {
-                  video.removeEventListener(eventToWaitFor, onReady);
-                  video.removeEventListener('error', onError);
-                  console.log(`Video ${currentVideoIndex + 1} ready`);
-                  
-                  // Very short delay for continuous loading
-                  const delay = isPriority ? 300 : 500;
-                  setTimeout(() => {
-                      currentVideoIndex++;
-                      loadNextVideo();
-                  }, delay);
-              };
-              
-              const onError = (error) => {
-                  video.removeEventListener(eventToWaitFor, onReady);
-                  video.removeEventListener('error', onError);
-                  console.warn(`Video ${currentVideoIndex + 1} failed to load:`, error.type || 'unknown error');
-                  failedVideos++;
-                  
-                  // Continue to next video even if one fails
-                  setTimeout(() => {
-                      currentVideoIndex++;
-                      loadNextVideo();
-                  }, 200);
-              };
-              
-              // Add timeout to prevent hanging
-              const timeout = setTimeout(() => {
-                  video.removeEventListener(eventToWaitFor, onReady);
-                  video.removeEventListener('error', onError);
-                  console.warn(`Video ${currentVideoIndex + 1} timed out`);
-                  failedVideos++;
-                  currentVideoIndex++;
-                  loadNextVideo();
-              }, isPriority ? 20000 : 15000);
-              
-              const onReadyWithTimeout = () => {
                   clearTimeout(timeout);
-                  onReady();
+                  console.log(`✓ Video ${state.index} - ready, attempting play`);
+                  setTimeout(() => attemptPlay(video), 100);
+                  resolve();
               };
               
-              const onErrorWithTimeout = (error) => {
-                  clearTimeout(timeout);
-                  onError(error);
-              };
-              
-              video.addEventListener(eventToWaitFor, onReadyWithTimeout, { once: true });
-              video.addEventListener('error', onErrorWithTimeout, { once: true });
-          } else {
-              // Skip if already preloaded
-              currentVideoIndex++;
-              loadNextVideo();
-          }
-      };
+              video.addEventListener('canplaythrough', onReady, { once: true });
+          });
+      }
       
-      // Start the sequential loading process
-      loadNextVideo();
-  };
-  
-  // Resume background loading when active video is stable
-  const resumeBackgroundLoading = () => {
-      if (!isBackgroundLoadingPaused) return;
+      // Pause other videos first
+      pauseOtherVideos(video);
       
-      isBackgroundLoadingPaused = false;
-      console.log('Resuming background video loading');
-      
-      // Resume any queued loads
-      if (backgroundLoadQueue.length > 0) {
-          const nextIndex = backgroundLoadQueue.shift();
-          // Trigger continuation of loading
-          setTimeout(() => {
-              const sortedVideos = Array.from(projectVideos).sort((a, b) => {
-                  const stateA = videoLoadingStates.get(a);
-                  const stateB = videoLoadingStates.get(b);
-                  return (stateA?.index || 0) - (stateB?.index || 0);
-              });
-              
-              // Find next unloaded video and load it
-              for (let i = nextIndex; i < sortedVideos.length; i++) {
-                  const video = sortedVideos[i];
-                  const state = videoLoadingStates.get(video);
-                  if (state && !state.isPreloaded && video.preload !== 'auto') {
-                      console.log(`Loading next video ${i + 1} after pause`);
-                      state.isPreloaded = true;
-                      video.preload = 'auto';
-                      video.load();
-                      break;
-                  }
+      // Attempt to play
+      try {
+          await video.play();
+          console.log(`✓✓ Video ${state.index} - playing successfully`);
+          state.state = VIDEO_STATES.PLAYING;
+          
+      } catch (error) {
+          console.log(`❌ Video ${state.index} - play failed:`, error.name);
+          
+          // Handle different error types
+          if (error.name === 'NotAllowedError') {
+              // Mobile autoplay blocked - wait for user interaction
+              if (!userHasInteracted) {
+                  console.log(`🔒 Video ${state.index} - waiting for user interaction`);
+                  return;
               }
-          }, 1000);
+              
+              // User has interacted but still blocked - retry with exponential backoff
+              if (state.playAttempts < 8) {
+                  const delay = Math.min(1000 * Math.pow(1.5, state.playAttempts - 1), 5000);
+                  console.log(`🔄 Video ${state.index} - retrying in ${delay}ms`);
+                  
+                  state.retryTimeout = setTimeout(() => {
+                      attemptPlay(video);
+                  }, delay);
+              }
+              
+          } else if (error.name === 'AbortError') {
+              // Play was interrupted - retry once
+              if (state.playAttempts < 3) {
+                  console.log(`🔄 Video ${state.index} - play interrupted, retrying`);
+                  setTimeout(() => attemptPlay(video), 1000);
+              }
+              
+          } else {
+              console.error(`❌ Video ${state.index} - unexpected error:`, error);
+          }
       }
   };
   
-  // Load adjacent videos when a video starts playing
-  const loadAdjacentVideos = (currentVideo) => {
+  // ========================================
+  // SIMPLIFIED BACKGROUND LOADING
+  // ========================================
+  
+  let currentlyPlayingVideo = null;
+  let isBackgroundLoadingPaused = false;
+  
+  const pauseBackgroundLoading = (priorityVideo) => {
+      if (!isBackgroundLoadingPaused) {
+          isBackgroundLoadingPaused = true;
+          currentlyPlayingVideo = priorityVideo;
+          console.log(`⏸ Background loading paused for video ${videoStates.get(priorityVideo).index}`);
+      }
+  };
+  
+  const resumeBackgroundLoading = () => {
+      if (isBackgroundLoadingPaused) {
+          isBackgroundLoadingPaused = false;
+          console.log('▶ Background loading resumed');
+      }
+  };
+  
+  // ========================================
+  // OPTIMIZED PRELOADING SYSTEM
+  // Load FIRST video immediately, then rest in background after page load completes
+  // ========================================
+  
+  const preloadFirstVideoThenRest = () => {
       const sortedVideos = Array.from(projectVideos).sort((a, b) => {
-          const stateA = videoLoadingStates.get(a);
-          const stateB = videoLoadingStates.get(b);
+          const stateA = videoStates.get(a);
+          const stateB = videoStates.get(b);
           return (stateA?.index || 0) - (stateB?.index || 0);
       });
       
-      const currentIndex = sortedVideos.indexOf(currentVideo);
-      if (currentIndex === -1) return;
+      if (sortedVideos.length === 0) return;
       
-      // Load next 2 videos if not already loading/loaded
-      for (let i = 1; i <= 2; i++) {
-          const nextIndex = currentIndex + i;
-          if (nextIndex < sortedVideos.length) {
-              const nextVideo = sortedVideos[nextIndex];
-              const state = videoLoadingStates.get(nextVideo);
-              
-              if (state && !state.isPreloaded && nextVideo.preload !== 'auto' && !isBackgroundLoadingPaused) {
-                  console.log(`Loading adjacent video ${nextIndex + 1}`);
-                  state.isPreloaded = true;
-                  nextVideo.preload = 'auto';
-                  nextVideo.load();
+      const firstVideo = sortedVideos[0];
+      const firstState = videoStates.get(firstVideo);
+      const restVideos = sortedVideos.slice(1);
+      
+      console.log(`🚀 Loading first video (index ${firstState.index}) to complete page load...`);
+      
+      // Load the first video immediately
+      firstState.isPreloaded = true;
+      firstVideo.preload = 'auto';
+      firstVideo.load();
+      
+      // Once first video has enough data (canplay = ~10 seconds buffered), page load is complete
+      const onFirstVideoReady = () => {
+          console.log(`✓✓ First video ready - page load complete! Loading remaining videos in background...`);
+          
+          // Now start loading the rest of the videos sequentially in the background
+          let currentIndex = 0;
+          
+          const loadNextBackgroundVideo = () => {
+              // Pause if active video is buffering
+              if (isBackgroundLoadingPaused) {
+                  console.log('⏸ Background loading paused - waiting for active video');
+                  setTimeout(loadNextBackgroundVideo, 2000);
+                  return;
               }
-          }
+              
+              if (currentIndex >= restVideos.length) {
+                  console.log('✓✓ All background videos loaded');
+                  return;
+              }
+              
+              const video = restVideos[currentIndex];
+              const state = videoStates.get(video);
+              
+              if (!state.isPreloaded) {
+                  // Priority loading: First 2-3 videos get full preload, rest get lighter
+                  const isPriority = currentIndex < 2;
+                  const loadLevel = isPriority ? 'full (canplaythrough)' : 'light (canplay)';
+                  
+                  console.log(`📥 Loading video ${state.index} - ${loadLevel}`);
+                  
+                  state.isPreloaded = true;
+                  video.preload = 'auto';
+                  video.load();
+                  
+                  // CRITICAL: Wait for actual playable data, not just metadata
+                  const eventToWait = isPriority ? 'canplaythrough' : 'canplay';
+                  const timeoutDuration = isPriority ? 12000 : 8000; // More time for full load
+                  
+                  const timeout = setTimeout(() => {
+                      console.log(`⏱ Video ${state.index} - timeout waiting for ${eventToWait}, moving to next`);
+                      currentIndex++;
+                      loadNextBackgroundVideo();
+                  }, timeoutDuration);
+                  
+                  const onReady = () => {
+                      clearTimeout(timeout);
+                      state.hasEnoughData = true;
+                      console.log(`✓✓ Video ${state.index} - ${eventToWait} fired, READY TO PLAY`);
+                      currentIndex++;
+                      // Very short delay for sequential loading
+                      setTimeout(loadNextBackgroundVideo, 300);
+                  };
+                  
+                  video.addEventListener(eventToWait, onReady, { once: true });
+                  video.addEventListener('error', () => {
+                      clearTimeout(timeout);
+                      console.log(`❌ Video ${state.index} - error, moving to next`);
+                      currentIndex++;
+                      loadNextBackgroundVideo();
+                  }, { once: true });
+              } else {
+                  currentIndex++;
+                  loadNextBackgroundVideo();
+              }
+          };
+          
+          // Start background loading after a delay
+          setTimeout(loadNextBackgroundVideo, 1500);
+      };
+      
+      // Wait for first video to have enough data to play
+      // Reduced timeout to complete page load faster
+      const timeout = setTimeout(() => {
+          console.log(`⏱ First video timeout (5s) - proceeding anyway`);
+          onFirstVideoReady();
+      }, 5000); // Reduced from 8s to 5s for faster page completion
+      
+      // Use loadeddata (first frame) as minimum, then upgrade
+      const minDataLoaded = () => {
+          clearTimeout(timeout);
+          console.log(`✓ First video has data (readyState: ${firstVideo.readyState})`);
+          onFirstVideoReady();
+      };
+      
+      // Try canplay first (preferred), fallback to loadeddata
+      if (firstVideo.readyState >= 2) {
+          // Already has some data
+          minDataLoaded();
+      } else {
+          firstVideo.addEventListener('loadeddata', minDataLoaded, { once: true });
+          firstVideo.addEventListener('error', () => {
+              clearTimeout(timeout);
+              console.log(`❌ First video error - loading rest anyway`);
+              onFirstVideoReady();
+          }, { once: true });
       }
   };
   
@@ -446,6 +665,8 @@
       projectVideos.forEach(video => {
           if (video !== currentVideo && !video.paused) {
               video.pause();
+              const state = videoStates.get(video);
+              state.state = VIDEO_STATES.PAUSED;
           }
       });
   };
@@ -457,67 +678,77 @@
       });
   });
 
-  // Intersection Observer for autoplay when in viewport with smart loading
+  // ========================================
+  // IMPROVED INTERSECTION OBSERVER
+  // Mobile-optimized viewport detection
+  // ========================================
+  
   const videoObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
           const video = entry.target;
           const card = video.closest('.card');
-          const state = videoLoadingStates.get(video);
+          const state = videoStates.get(video);
           
-          if (entry.isIntersecting) {
-              // Add in-focus class to highlight the active card
+          // Mobile-friendly visibility threshold
+          const isMobile = window.innerWidth <= 768;
+          const minVisibility = isMobile ? 0.4 : 0.5;
+          const isVisible = entry.isIntersecting && entry.intersectionRatio >= minVisibility;
+          
+          console.log(`👁 Video ${state.index} - visibility: ${(entry.intersectionRatio * 100).toFixed(0)}%, visible: ${isVisible}`);
+          
+          state.isInViewport = isVisible;
+          
+          if (isVisible) {
+              // Highlight the active card
               if (card) {
                   card.classList.add('in-focus');
               }
               
-              // If video was only preloaded with metadata, upgrade to full preload
-              if (video.preload === 'metadata' && state && !state.isLoading) {
-                  console.log('Upgrading video to full preload (in viewport)');
-                  state.isLoading = true;
+              // Ensure video is loading
+              if (!state.isPreloaded) {
+                  console.log(`📥 Video ${state.index} - starting load (in viewport)`);
+                  state.isPreloaded = true;
                   video.preload = 'auto';
                   video.load();
               }
               
-              // Wait for video to be ready before playing
-              const attemptPlay = () => {
-                  if (video.readyState >= 3) { // HAVE_FUTURE_DATA or better
-                      video.play().catch(error => {
-                          console.log('Autoplay prevented:', error);
-                      });
-                  } else {
-                      // Video not ready yet, wait for canplay event
-                      const onCanPlay = () => {
-                          video.removeEventListener('canplay', onCanPlay);
-                          video.play().catch(error => {
-                              console.log('Autoplay prevented:', error);
-                          });
-                      };
-                      video.addEventListener('canplay', onCanPlay, { once: true });
-                      
-                      // Fallback timeout in case canplay doesn't fire
-                      setTimeout(() => {
-                          video.removeEventListener('canplay', onCanPlay);
-                          if (video.readyState >= 2) {
-                              video.play().catch(error => {
-                                  console.log('Autoplay prevented:', error);
-                              });
-                          }
-                      }, 3000);
-                  }
-              };
+              // Clear any pending retry timeouts
+              if (state.retryTimeout) {
+                  clearTimeout(state.retryTimeout);
+                  state.retryTimeout = null;
+              }
               
-              setTimeout(attemptPlay, 100);
+              // Attempt to play if ready
+              if (state.hasEnoughData) {
+                  console.log(`▶ Video ${state.index} - has enough data, attempting play`);
+                  setTimeout(() => attemptPlay(video), 200);
+              } else {
+                  console.log(`⏳ Video ${state.index} - waiting for data before play`);
+              }
+              
           } else {
-              // Video is out of viewport - pause it and remove focus styling
-              video.pause();
+              // Video out of viewport
               if (card) {
                   card.classList.remove('in-focus');
               }
+              
+              // Pause video and clear retry attempts
+              if (!video.paused) {
+                  video.pause();
+                  console.log(`⏸ Video ${state.index} - paused (out of viewport)`);
+              }
+              
+              if (state.retryTimeout) {
+                  clearTimeout(state.retryTimeout);
+                  state.retryTimeout = null;
+              }
+              
+              state.playAttempts = 0;
           }
       });
   }, { 
-      threshold: 0.5, // Trigger when 50% of video is visible
-      rootMargin: '-50px' // Add some margin for better UX
+      threshold: [0.0, 0.3, 0.4, 0.5, 0.7, 1.0], // More granular thresholds
+      rootMargin: '0px' // No margin - precise detection
   });
 
   // Observe all project videos
@@ -525,24 +756,36 @@
       videoObserver.observe(video);
   });
   
-  // Proximity observer - ensures videos are loaded as backup
-  // (Most videos should already be loaded by continuous preloader)
+  // ========================================
+  // PROXIMITY OBSERVER (Aggressive Preloading)
+  // Starts loading videos 2 screens away for smooth scrolling
+  // ========================================
+  
   const proximityObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
           const video = entry.target;
-          const state = videoLoadingStates.get(video);
+          const state = videoStates.get(video);
           
-          // When video is approaching viewport, ensure it's loading
-          if (entry.isIntersecting && video.preload !== 'auto' && state && !state.isLoading) {
-              console.log('Video approaching viewport (backup load)');
-              state.isLoading = true;
+          // When video is approaching viewport (2 screens away), ensure it's loading
+          if (entry.isIntersecting && !state.isPreloaded) {
+              console.log(`📥 Video ${state.index} - proximity preload (2 screens away)`);
+              state.isPreloaded = true;
               video.preload = 'auto';
               video.load();
+              
+              // Immediately wait for it to be playable
+              const onProximityReady = () => {
+                  state.hasEnoughData = true;
+                  console.log(`✓ Video ${state.index} - proximity preload complete`);
+              };
+              
+              // Use canplay for proximity loads (faster than canplaythrough)
+              video.addEventListener('canplay', onProximityReady, { once: true });
           }
       });
   }, { 
       threshold: 0,
-      rootMargin: '150% 0px 150% 0px' // Trigger when video is within 1.5 screens above or below
+      rootMargin: '200% 0px 200% 0px' // Increased to 2 screens (200%) for earlier loading
   });
   
   // Observe all project videos for proximity loading
@@ -550,11 +793,19 @@
       proximityObserver.observe(video);
   });
   
-  // Start preloading all videos sequentially on page load
-  // Small delay to let page render first
-  setTimeout(() => {
-      preloadAllVideosSequentially();
-  }, 1000);
+  // Start loading first video immediately, then rest in background
+  // Use requestIdleCallback for better performance, fallback to immediate
+  if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+          console.log('🚀 Starting first video load (idle callback)');
+          preloadFirstVideoThenRest();
+      }, { timeout: 100 });
+  } else {
+      setTimeout(() => {
+          console.log('🚀 Starting first video load (immediate)');
+          preloadFirstVideoThenRest();
+      }, 100); // Reduced to 100ms for faster start
+  }
 
   // Experience card expand/collapse functionality
   const experienceCards = document.querySelectorAll('[data-experience-card]');
@@ -737,10 +988,15 @@
     // Use the PDF view URL for navigation
     const baseUrl = pdfViewUrl;
     
-    // Mobile gets fit-to-page, desktop gets 85% zoom
+    // Mobile gets simplified URL for better native controls, desktop gets custom zoom
     const isMobile = window.innerWidth <= 768;
-    const zoom = isMobile ? 'page-fit' : '85';
-    fallbackIframe.src = `${baseUrl}#page=${iframePage}&toolbar=0&navpanes=0&scrollbar=1&zoom=${zoom}`;
+    
+    if (isMobile) {
+      fallbackIframe.src = `${baseUrl}#page=${iframePage}&view=FitH`;
+    } else {
+      fallbackIframe.src = `${baseUrl}#page=${iframePage}&toolbar=0&navpanes=0&scrollbar=1&zoom=85`;
+    }
+    
     updateIframePageButtons();
   };
 
@@ -757,10 +1013,17 @@
       
       // Use Cloudflare CDN for viewing (best quality)
       const currentUrl = pdfViewUrl;
-      // Mobile gets fit-to-page, desktop gets 85% zoom for better quality
+      // Mobile: use page-width for better mobile viewing with zoom enabled
+      // Desktop: use 85% zoom for better quality
       const isMobile = window.innerWidth <= 768;
-      const zoom = isMobile ? 'page-fit' : '85';
-      fallbackIframe.src = `${currentUrl}#page=1&toolbar=0&navpanes=0&scrollbar=1&zoom=${zoom}`;
+      
+      // For mobile: simpler URL without zoom parameter to allow native browser controls
+      // This enables pinch-to-zoom and proper mobile rendering
+      if (isMobile) {
+        fallbackIframe.src = `${currentUrl}#page=1&view=FitH`;
+      } else {
+        fallbackIframe.src = `${currentUrl}#page=1&toolbar=0&navpanes=0&scrollbar=1&zoom=85`;
+      }
       
       console.log(`Loading iframe with URL: ${currentUrl}`);
       
@@ -823,6 +1086,13 @@
       }
     }
     
+    // On mobile, open PDF directly in browser's native viewer for best experience
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      window.open(pdfViewUrl, '_blank');
+      return; // Don't open modal on mobile
+    }
+    
     resumeModal.classList.add('is-open');
     document.body.style.overflow = 'hidden';
     
@@ -844,6 +1114,11 @@
   
   if (viewResumeMobileBtn) {
     viewResumeMobileBtn.addEventListener('click', openResumeModal);
+  }
+  
+  const viewResumeFooterBtn = document.getElementById('view-resume-footer-btn');
+  if (viewResumeFooterBtn) {
+    viewResumeFooterBtn.addEventListener('click', openResumeModal);
   }
 
   // Event listeners for closing modal

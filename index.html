@@ -9,13 +9,23 @@
       content="Arjun Gullbadhar — Expert LLM Engineer building scalable, production-grade AI systems and tools. Explore my projects, experience, and approach to creating intelligent products."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Load fonts asynchronously to not block page load -->
     <link
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@500&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
+    <!-- Load PDF.js asynchronously to not block page load -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" async defer></script>
   </head>
   <body>
     <!-- ADD THIS ELEMENT -->
@@ -46,7 +56,14 @@
         </nav>
       </header>
       
+      <div class="mobile-nav-overlay"></div>
       <div class="mobile-nav">
+          <button class="mobile-nav-close" aria-label="Close menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
           <ul class="nav-links">
             <li><a href="#projects">Projects</a></li>
             <li><a href="#expertise">Expertise</a></li>
@@ -129,8 +146,14 @@
                   loop 
                   playsinline
                   preload="none"
+                  webkit-playsinline
+                  x5-playsinline
                   src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/slides-agent.mp4"
                 ></video>
+                <div class="video-speed-banner">
+                  <div class="video-speed-banner-line1">Accelerated Demo Video</div>
+                  <div class="video-speed-banner-line2">(3x Speed for Brevity)</div>
+                </div>
               </div>
               <div class="project-content">
                 <h3>Slides Agent</h3>
@@ -157,8 +180,14 @@
                   loop 
                   playsinline
                   preload="none"
-                  src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/calorie%20tracker%20with%20sound.mp4"
+                  webkit-playsinline
+                  x5-playsinline
+                  src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/calorie_tracker_final_2.mp4"
                 ></video>
+                <div class="video-speed-banner">
+                  <div class="video-speed-banner-line1">Accelerated Demo Video</div>
+                  <div class="video-speed-banner-line2">(3x Speed for Brevity)</div>
+                </div>
               </div>
               <div class="project-content">
                 <h3>Calorie AI Tracker</h3>
@@ -185,8 +214,14 @@
                   loop 
                   playsinline
                   preload="none"
+                  webkit-playsinline
+                  x5-playsinline
                   src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/get-to-know-your-partner.mp4"
                 ></video>
+                <div class="video-speed-banner">
+                  <div class="video-speed-banner-line1">Accelerated Demo Video</div>
+                  <div class="video-speed-banner-line2">(3x Speed for Brevity)</div>
+                </div>
               </div>
               <div class="project-content">
                 <h3>Get to Know Your Partner (AI Relationship Copilot)</h3>
@@ -213,8 +248,14 @@
                   loop 
                   playsinline
                   preload="none"
+                  webkit-playsinline
+                  x5-playsinline
                   src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/textingstory.mp4"
                 ></video>
+                <div class="video-speed-banner">
+                  <div class="video-speed-banner-line1">Accelerated Demo Video</div>
+                  <div class="video-speed-banner-line2">(3x Speed for Brevity)</div>
+                </div>
               </div>
               <div class="project-content">
                 <h3>Texting Story Maker</h3>
@@ -241,8 +282,14 @@
                   loop 
                   playsinline
                   preload="none"
+                  webkit-playsinline
+                  x5-playsinline
                   src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/plantiq.mp4"
                 ></video>
+                <div class="video-speed-banner">
+                  <div class="video-speed-banner-line1">Accelerated Demo Video</div>
+                  <div class="video-speed-banner-line2">(3x Speed for Brevity)</div>
+                </div>
               </div>
               <div class="project-content">
                 <h3>Plant Parent (Identifier, Disease, Care)</h3>
@@ -269,8 +316,14 @@
                   loop 
                   playsinline
                   preload="none"
+                  webkit-playsinline
+                  x5-playsinline
                   src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/meme-maker.mp4"
                 ></video>
+                <div class="video-speed-banner">
+                  <div class="video-speed-banner-line1">Accelerated Demo Video</div>
+                  <div class="video-speed-banner-line2">(3x Speed for Brevity)</div>
+                </div>
               </div>
               <div class="project-content">
                 <h3>Meme Creation Copilot</h3>
@@ -312,8 +365,14 @@
                   loop 
                   playsinline
                   preload="none"
+                  webkit-playsinline
+                  x5-playsinline
                   src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/medium-dashboard-speed2x.mp4"
                 ></video>
+                <div class="video-speed-banner">
+                  <div class="video-speed-banner-line1">Accelerated Demo Video</div>
+                  <div class="video-speed-banner-line2">(3x Speed for Brevity)</div>
+                </div>
               </div>
 
               <!-- Content Below the Video -->
@@ -497,12 +556,12 @@
           <div class="card contact-card reveal">
             <div class="card-spotlight"></div>
             <div class="contact-copy">
-              <h2>Let's build the next wave of intelligent products.</h2>
-              <p>Actively exploring senior IC and technical lead roles where AI strategy meets product polish. Reach out and let's compare roadmaps.</p>
+              <h2>Let's build the next wave of intelligent products together.</h2>
+              <p>My work is driven by a relentless curiosity to build things that matter. The past 1.5 years as an indie builder has been an intense, end-to-end masterclass in turning complex AI concepts into shipped, revenue-generating products. Now, I am ready to bring that same energy, ownership, and product-focused mindset to a collaborative team. I am actively seeking a role where I can contribute to a larger vision, tackle challenges at a greater scale, and grow alongside the best in the field.</p>
             </div>
             <div class="contact-actions">
-              <a class="primary-cta" href="mailto:hello@arjungullbadhar.com">Start a conversation</a>
-              <a class="ghost-cta" href="https://cal.com" target="_blank" rel="noopener">Schedule time</a>
+              <button class="primary-cta" id="view-resume-footer-btn">View Resume</button>
+              <a class="ghost-cta" href="mailto:arjungullbadhar01@gmail.com">Contact me</a>
             </div>
           </div>
         </section>
@@ -569,6 +628,8 @@
               class="resume-pdf-iframe-fallback"
               title="Arjun Gullbadhar Resume"
               style="display: none;"
+              allow="fullscreen"
+              loading="lazy"
             ></iframe>
             <div class="resume-page-controls">
               <button class="resume-page-btn" id="prev-page" disabled>
