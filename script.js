@@ -16,6 +16,52 @@
   const yearSpan = document.getElementById("year");
   if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 
+  // Handle home link clicks to reset personalization
+  const setupHomeNavigation = () => {
+      const logoLink = document.querySelector('.logo');
+      const homeLinks = document.querySelectorAll('a[href="#"], a[href="#top"]');
+      
+      const handleHomeClick = (e) => {
+          // Only handle if we're on a personalized URL
+          const path = window.location.pathname;
+          // Check for both patterns: /firstname_companyname and /_companyname
+          if (path && path !== '/' && (path.match(/^\/([^_\/]+)_([^_\/]+)\/?$/) || path.match(/^\/_([^\/]+)\/?$/))) {
+              e.preventDefault();
+              // Reset to root and reload to show default greeting
+              window.history.pushState({}, '', '/');
+              window.location.reload();
+          }
+      };
+      
+      if (logoLink) {
+          logoLink.addEventListener('click', handleHomeClick);
+      }
+      
+      homeLinks.forEach(link => {
+          link.addEventListener('click', handleHomeClick);
+      });
+  };
+  
+  // Handle browser back/forward navigation
+  window.addEventListener('popstate', () => {
+      // Reload page to reflect new URL state
+      window.location.reload();
+  });
+  
+  // GitHub Pages SPA redirect handling
+  // Check if we were redirected from 404.html
+  (function() {
+      const redirect = sessionStorage.redirect;
+      delete sessionStorage.redirect;
+      if (redirect && redirect !== location.pathname) {
+          // Restore the original URL
+          history.replaceState(null, null, redirect);
+      }
+  })();
+  
+  // Setup navigation handlers
+  setupHomeNavigation();
+
   const commandEl = document.getElementById('terminal-command');
   const commandCursor = document.getElementById('command-cursor');
   const outputEl = document.getElementById('terminal-output');
@@ -31,10 +77,60 @@
       // Detect mobile device
       const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
+      // Capitalize first letter of each word
+      const capitalizeWords = (str) => {
+          return str.split(' ').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          ).join(' ');
+      };
+      
+      // Parse URL path for personalization
+      const parsePersonalization = () => {
+          const path = window.location.pathname;
+          
+          // Match pattern like /firstname_companyname
+          const matchWithName = path.match(/^\/([^_\/]+)_([^_\/]+)\/?$/);
+          if (matchWithName) {
+              const firstname = capitalizeWords(matchWithName[1].replace(/-/g, ' '));
+              const companyname = capitalizeWords(matchWithName[2].replace(/-/g, ' '));
+              return { firstname, companyname, type: 'with-name' };
+          }
+          
+          // Match pattern like /_companyname (no firstname)
+          const matchCompanyOnly = path.match(/^\/_([^\/]+)\/?$/);
+          if (matchCompanyOnly) {
+              const companyname = capitalizeWords(matchCompanyOnly[1].replace(/-/g, ' '));
+              return { companyname, type: 'company-only' };
+          }
+          
+          return null;
+      };
+      
+      // Get personalization data
+      const personalization = parsePersonalization();
+      
+      // Create personalized greeting
+      const getGreeting = () => {
+          if (personalization) {
+              if (personalization.type === 'with-name') {
+                  return {
+                      text: `Hi ${personalization.firstname} at ${personalization.companyname},`,
+                      html: `Hi <span class="personalized-name">${personalization.firstname}</span> at <span class="personalized-name">${personalization.companyname}</span>,`
+                  };
+              } else if (personalization.type === 'company-only') {
+                  return {
+                      text: `Hi Brilliant Minds at ${personalization.companyname},`,
+                      html: `Hi <span class="personalized-name">Brilliant Minds</span> at <span class="personalized-name">${personalization.companyname}</span>,`
+                  };
+              }
+          }
+          return { text: "Hey, I'm Arjun.", html: "Hey, I'm Arjun." };
+      };
+      
       // Mobile version - more concise
       const mobileTexts = [
-          "Hey, I'm Arjun.",
-          "I build revenue-generating AI products, solo and end-to-end.",
+          getGreeting(),
+          personalization ? "I am Arjun." : "I build revenue-generating AI products, solo and end-to-end.",
           "",
           "// Live Portfolio:",
           "• 10+ Production iOS Apps",
@@ -51,7 +147,8 @@
       
       // Desktop version - detailed
       const desktopTexts = [
-          "Hey, I'm Arjun.",
+          getGreeting(),
+          personalization ? "I am Arjun." : "",
           "",
           "I build AI products that generate revenue. Solo. End-to-end.",
           "",
@@ -82,8 +179,18 @@
           outputEl.style.visibility = 'visible';
           finalCursorLine.style.display = 'flex';
           
-          texts.forEach((text, index) => {
-              outputParas[index].textContent = text;
+          texts.forEach((content, index) => {
+              // Handle both string and object (with text/html properties)
+              const text = typeof content === 'string' ? content : content.text;
+              const html = typeof content === 'string' ? content : content.html;
+              
+              // Use HTML version for calculation if available
+              if (html !== text) {
+                  outputParas[index].innerHTML = html;
+              } else {
+                  outputParas[index].textContent = text;
+              }
+              
               // Apply section-header class for proper styling calculation
               if (text === "Live Now:" || text === "Background:" || text === "What that means:" || 
                   text === "// Live Portfolio:" || text === "// Core Experience:" || 
@@ -101,13 +208,21 @@
           terminalWindow.style.width = `${calculatedWidth}px`;
           
           // Clear all text and restore visibility for typewriter effect
-          outputParas.forEach(p => p.textContent = '');
+          outputParas.forEach(p => {
+              p.textContent = '';
+              p.innerHTML = '';
+          });
           outputEl.style.opacity = '1';
           outputEl.style.visibility = 'hidden';
           finalCursorLine.style.display = 'none';
       };
 
-      const typewriter = (element, text, onComplete, speed = 10) => {
+      const typewriter = (element, content, onComplete, speed = 10) => {
+          // Handle both string and object (with text/html properties)
+          const text = typeof content === 'string' ? content : content.text;
+          const html = typeof content === 'string' ? content : content.html;
+          const hasHTML = html !== text;
+          
           let i = 0;
           element.textContent = '';
           const interval = setInterval(() => {
@@ -116,6 +231,12 @@
                   i++;
               } else {
                   clearInterval(interval);
+                  
+                  // Replace with HTML version if available
+                  if (hasHTML) {
+                      element.innerHTML = html;
+                  }
+                  
                   // Add section-header class to specific headers
                   if (text === "Live Now:" || text === "Background:" || text === "What that means:" || 
                       text === "// Live Portfolio:" || text === "// Core Experience:" || 
@@ -840,8 +961,8 @@
   let pageNumPending = null;
 
   // Simple approach: iframe for viewing, GitHub for download
-  const pdfViewUrl = 'https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/Resume_Arjun_G.pdf'; // Cloudflare CDN for viewing
-  const downloadUrl = 'https://github.com/arjunfzk/portfolio-assets/raw/main/Resume_Arjun_G.pdf'; // GitHub for download
+  const pdfViewUrl = 'https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/resume_arjun-8.pdf'; // Cloudflare CDN for viewing
+  const downloadUrl = 'https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/resume_arjun-8.pdf'; // Same URL for download
 
   // Configure PDF.js worker
   if (typeof pdfjsLib !== 'undefined') {
