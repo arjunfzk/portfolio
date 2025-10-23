@@ -77,19 +77,28 @@
       // Detect mobile device
       const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
-      // Capitalize first letter of each word
+      // Capitalize first letter of each word, but preserve ALL CAPS
       const capitalizeWords = (str) => {
-          return str.split(' ').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-          ).join(' ');
+          return str.split(' ').map(word => {
+              // If word is all caps, keep it as is
+              if (word === word.toUpperCase() && word.length > 1) {
+                  return word;
+              }
+              // Otherwise capitalize normally
+              return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          }).join(' ');
       };
       
       // Parse URL path for personalization
       const parsePersonalization = () => {
           const path = window.location.pathname;
           
+          // Safari compatibility: Also check for URL hash as fallback
+          const hashPath = window.location.hash.substring(1);
+          const currentPath = path || hashPath;
+          
           // Match pattern like /firstname_companyname
-          const matchWithName = path.match(/^\/([^_\/]+)_([^_\/]+)\/?$/);
+          const matchWithName = currentPath.match(/^\/([^_\/]+)_([^_\/]+)\/?$/);
           if (matchWithName) {
               const firstname = capitalizeWords(matchWithName[1].replace(/-/g, ' '));
               const companyname = capitalizeWords(matchWithName[2].replace(/-/g, ' '));
@@ -97,7 +106,7 @@
           }
           
           // Match pattern like /_companyname (no firstname)
-          const matchCompanyOnly = path.match(/^\/_([^\/]+)\/?$/);
+          const matchCompanyOnly = currentPath.match(/^\/_([^\/]+)\/?$/);
           if (matchCompanyOnly) {
               const companyname = capitalizeWords(matchCompanyOnly[1].replace(/-/g, ' '));
               return { companyname, type: 'company-only' };
@@ -114,8 +123,8 @@
           if (personalization) {
               if (personalization.type === 'with-name') {
                   return {
-                      text: `Hi ${personalization.firstname} at ${personalization.companyname},`,
-                      html: `Hi <span class="personalized-name">${personalization.firstname}</span> at <span class="personalized-name">${personalization.companyname}</span>,`
+                      text: `Hey ${personalization.firstname},`,
+                      html: `Hey <span class="personalized-name">${personalization.firstname}</span>,`
                   };
               } else if (personalization.type === 'company-only') {
                   return {
@@ -125,6 +134,17 @@
               }
           }
           return { text: "Hey, I'm Arjun.", html: "Hey, I'm Arjun." };
+      };
+      
+      // Create company line for with-name type
+      const getCompanyLine = () => {
+          if (personalization && personalization.type === 'with-name') {
+              return {
+                  text: `Ready for enterprise scale at ${personalization.companyname}.`,
+                  html: `Ready for enterprise scale at <span class="personalized-name">${personalization.companyname}</span>.`
+              };
+          }
+          return null;
       };
       
       // Mobile version - more concise
@@ -140,10 +160,10 @@
           "• 1.5+ years building products from scratch solo.",
           "• 3.5+ years as a Data Scientist at a Startup.",
           "",
-          "Proven in startup & solo. Ready for enterprise scale.",
+          personalization && personalization.type === 'with-name' ? getCompanyLine() : "Proven in startup & solo. Ready for enterprise scale.",
           "",
           "↓ Scroll to see the apps in action ↓"
-      ];
+      ].filter(item => item !== null); // Remove null items
       
       // Desktop version - detailed
       const desktopTexts = [
@@ -163,9 +183,9 @@
           "• Optimized RAG for actual user queries.",
           "• I've built and shipped AI systems that people pay for.",
           "",
-          "I've proven the model solo. Now, I want to tackle challenges at a scale that's impossible alone.",
+          personalization && personalization.type === 'with-name' ? getCompanyLine() : "I've proven the model solo. Now, I want to tackle challenges at a scale that's impossible alone.",
           "↓ Scroll to see the apps in action ↓"
-      ];
+      ].filter(item => item !== null); // Remove null items
       
       // Choose the appropriate text array based on device
       const texts = isMobile ? mobileTexts : desktopTexts;
