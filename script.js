@@ -62,6 +62,296 @@
   // Setup navigation handlers
   setupHomeNavigation();
 
+  // ========================================
+  // ANALYTICS SETUP
+  // Track personalized visits with rich context
+  // ========================================
+  
+  // Parse URL for personalization early
+  const parsePersonalizationForAnalytics = () => {
+    const path = window.location.pathname;
+    const hashPath = window.location.hash.substring(1);
+    const currentPath = path || hashPath;
+    
+    // Match pattern like /firstname_companyname
+    const matchWithName = currentPath.match(/^\/([^_\/]+)_([^_\/]+)\/?$/);
+    if (matchWithName) {
+      const firstname = matchWithName[1].replace(/-/g, ' ');
+      const companyname = matchWithName[2].replace(/-/g, ' ');
+      return { 
+        firstname, 
+        companyname, 
+        type: 'with-name',
+        urlPattern: `${firstname}_${companyname}`,
+        isPersonalized: true
+      };
+    }
+    
+    // Match pattern like /_companyname
+    const matchCompanyOnly = currentPath.match(/^\/_([^\/]+)\/?$/);
+    if (matchCompanyOnly) {
+      const companyname = matchCompanyOnly[1].replace(/-/g, ' ');
+      return { 
+        companyname, 
+        type: 'company-only',
+        urlPattern: `_${companyname}`,
+        isPersonalized: true
+      };
+    }
+    
+    return { type: 'default', isPersonalized: false };
+  };
+  
+  const personalizationData = parsePersonalizationForAnalytics();
+  
+  // Initialize analytics with custom dimensions via GTM dataLayer
+  window.dataLayer = window.dataLayer || [];
+  
+  // Send initial page view with personalization data
+  window.dataLayer.push({
+    'event': 'page_view',
+    'page_title': document.title,
+    'page_location': window.location.href,
+    'page_path': window.location.pathname,
+    'is_personalized': personalizationData.isPersonalized,
+    'visitor_firstname': personalizationData.firstname || 'none',
+    'visitor_company': personalizationData.companyname || 'none',
+    'url_pattern_type': personalizationData.type,
+    'url_pattern': personalizationData.urlPattern || 'default',
+    'visitor_type': personalizationData.isPersonalized ? 'personalized' : 'organic'
+  });
+  
+  console.log('✓ Google Tag Manager initialized with personalization:', personalizationData);
+  
+  // Initialize Microsoft Clarity with custom tags
+  if (typeof clarity !== 'undefined') {
+    // Tag this session with personalization info
+    if (personalizationData.isPersonalized) {
+      clarity('set', 'visitor_type', 'personalized');
+      clarity('set', 'url_pattern', personalizationData.urlPattern);
+      
+      if (personalizationData.firstname) {
+        clarity('set', 'firstname', personalizationData.firstname);
+      }
+      if (personalizationData.companyname) {
+        clarity('set', 'company', personalizationData.companyname);
+      }
+      
+      // Identify user for easier filtering in Clarity dashboard
+      const userId = personalizationData.urlPattern || 'anonymous';
+      clarity('identify', userId, {
+        type: personalizationData.type,
+        company: personalizationData.companyname || 'none'
+      });
+    } else {
+      clarity('set', 'visitor_type', 'organic');
+    }
+    
+    console.log('✓ Microsoft Clarity initialized with personalization:', personalizationData);
+  }
+  
+  // Track section visibility and time spent
+  const sectionTimeTracking = new Map();
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const sectionId = entry.target.id;
+      if (!sectionId) return;
+      
+      if (entry.isIntersecting) {
+        // Section became visible
+        sectionTimeTracking.set(sectionId, Date.now());
+        
+        // Track section view via GTM
+        window.dataLayer.push({
+          'event': 'section_view',
+          'section_name': sectionId,
+          'is_personalized': personalizationData.isPersonalized,
+          'visitor_company': personalizationData.companyname || 'none'
+        });
+        
+        if (typeof clarity !== 'undefined') {
+          clarity('event', 'section_view', { section: sectionId });
+        }
+        
+      } else {
+        // Section left viewport - calculate time spent
+        const startTime = sectionTimeTracking.get(sectionId);
+        if (startTime) {
+          const timeSpent = Math.round((Date.now() - startTime) / 1000); // seconds
+          
+          // Track time spent via GTM
+          window.dataLayer.push({
+            'event': 'section_time_spent',
+            'section_name': sectionId,
+            'time_seconds': timeSpent,
+            'is_personalized': personalizationData.isPersonalized,
+            'visitor_company': personalizationData.companyname || 'none'
+          });
+          
+          if (typeof clarity !== 'undefined') {
+            clarity('event', 'section_exit', { 
+              section: sectionId, 
+              time_seconds: timeSpent 
+            });
+          }
+          
+          sectionTimeTracking.delete(sectionId);
+        }
+      }
+    });
+  }, { threshold: 0.5 }); // 50% visible
+  
+  // Observe all sections
+  document.querySelectorAll('section[id]').forEach(section => {
+    sectionObserver.observe(section);
+  });
+  
+  // Track scroll depth
+  let maxScrollDepth = 0;
+  const scrollDepthThresholds = [25, 50, 75, 90, 100];
+  const reachedThresholds = new Set();
+  
+  window.addEventListener('scroll', () => {
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPosition = window.scrollY;
+    const scrollPercent = Math.round((scrollPosition / scrollHeight) * 100);
+    
+    // Track maximum scroll depth
+    if (scrollPercent > maxScrollDepth) {
+      maxScrollDepth = scrollPercent;
+    }
+    
+    // Track milestone thresholds
+    scrollDepthThresholds.forEach(threshold => {
+      if (scrollPercent >= threshold && !reachedThresholds.has(threshold)) {
+        reachedThresholds.add(threshold);
+        
+        // Track scroll depth via GTM
+        window.dataLayer.push({
+          'event': 'scroll_depth',
+          'scroll_percent': threshold,
+          'is_personalized': personalizationData.isPersonalized,
+          'visitor_company': personalizationData.companyname || 'none'
+        });
+        
+        if (typeof clarity !== 'undefined') {
+          clarity('event', 'scroll_milestone', { percent: threshold });
+        }
+      }
+    });
+  }, { passive: true });
+  
+  // Track video interactions
+  const trackVideoEvent = (video, eventName, additionalData = {}) => {
+    const videoIndex = video.getAttribute('data-video-index');
+    const videoContainer = video.closest('.project-card');
+    const projectTitle = videoContainer?.querySelector('h3')?.textContent || 'Unknown';
+    
+    // Track via GTM
+    window.dataLayer.push({
+      'event': eventName,
+      'video_index': videoIndex,
+      'project_title': projectTitle,
+      'is_personalized': personalizationData.isPersonalized,
+      'visitor_company': personalizationData.companyname || 'none',
+      ...additionalData
+    });
+    
+    if (typeof clarity !== 'undefined') {
+      clarity('event', eventName, { 
+        video: videoIndex, 
+        project: projectTitle,
+        ...additionalData
+      });
+    }
+  };
+  
+  // Track outbound link clicks
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+    
+    const href = link.getAttribute('href');
+    if (!href) return;
+    
+    // Track external links
+    if (href.startsWith('http') && !href.includes(window.location.hostname)) {
+      const linkText = link.textContent.trim() || link.getAttribute('aria-label') || 'Unknown';
+      
+      // Track via GTM
+      window.dataLayer.push({
+        'event': 'outbound_click',
+        'link_url': href,
+        'link_text': linkText,
+        'is_personalized': personalizationData.isPersonalized,
+        'visitor_company': personalizationData.companyname || 'none'
+      });
+      
+      if (typeof clarity !== 'undefined') {
+        clarity('event', 'outbound_click', { 
+          url: href, 
+          text: linkText 
+        });
+      }
+    }
+    
+    // Track internal navigation
+    if (href.startsWith('#')) {
+      const sectionId = href.substring(1);
+      
+      // Track via GTM
+      window.dataLayer.push({
+        'event': 'internal_navigation',
+        'section_id': sectionId,
+        'is_personalized': personalizationData.isPersonalized,
+        'visitor_company': personalizationData.companyname || 'none'
+      });
+      
+      if (typeof clarity !== 'undefined') {
+        clarity('event', 'internal_nav', { section: sectionId });
+      }
+    }
+  });
+  
+  // Track resume modal interactions
+  const trackResumeEvent = (action) => {
+    // Track via GTM
+    window.dataLayer.push({
+      'event': 'resume_interaction',
+      'action': action,
+      'is_personalized': personalizationData.isPersonalized,
+      'visitor_company': personalizationData.companyname || 'none'
+    });
+    
+    if (typeof clarity !== 'undefined') {
+      clarity('event', 'resume', { action: action });
+    }
+  };
+  
+  // Track session end and send final metrics
+  const trackSessionEnd = () => {
+    // Track via GTM
+    window.dataLayer.push({
+      'event': 'session_end',
+      'max_scroll_depth': maxScrollDepth,
+      'is_personalized': personalizationData.isPersonalized,
+      'visitor_company': personalizationData.companyname || 'none',
+      'session_duration': Math.round((Date.now() - performance.timing.navigationStart) / 1000)
+    });
+  };
+  
+  // Track when user leaves
+  window.addEventListener('beforeunload', trackSessionEnd);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      trackSessionEnd();
+    }
+  });
+  
+  // Make tracking functions globally available
+  window.trackVideoEvent = trackVideoEvent;
+  window.trackResumeEvent = trackResumeEvent;
+
   const commandEl = document.getElementById('terminal-command');
   const commandCursor = document.getElementById('command-cursor');
   const outputEl = document.getElementById('terminal-output');
@@ -526,6 +816,13 @@
           state.state = VIDEO_STATES.PLAYING;
           state.playAttempts = 0; // Reset attempts
           updateLoadingOverlay();
+          
+          // Track video play event
+          if (typeof window.trackVideoEvent === 'function') {
+              window.trackVideoEvent(video, 'video_play', {
+                  video_state: 'playing'
+              });
+          }
           
           // Resume background loading after video is stable
           setTimeout(() => {
@@ -1231,10 +1528,18 @@
       }
     }
     
+    // Track resume view
+    if (typeof window.trackResumeEvent === 'function') {
+      window.trackResumeEvent('view_opened');
+    }
+    
     // On mobile, open PDF directly in browser's native viewer for best experience
     const isMobile = window.innerWidth <= 768;
     if (isMobile) {
       window.open(pdfViewUrl, '_blank');
+      if (typeof window.trackResumeEvent === 'function') {
+        window.trackResumeEvent('mobile_view');
+      }
       return; // Don't open modal on mobile
     }
     
@@ -1250,6 +1555,11 @@
   const closeResumeModal = () => {
     resumeModal.classList.remove('is-open');
     document.body.style.overflow = '';
+    
+    // Track resume close
+    if (typeof window.trackResumeEvent === 'function') {
+      window.trackResumeEvent('view_closed');
+    }
   };
 
   // Event listeners for opening modal
@@ -1280,6 +1590,11 @@
   if (downloadResumeBtn) {
     downloadResumeBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      
+      // Track resume download
+      if (typeof window.trackResumeEvent === 'function') {
+        window.trackResumeEvent('download_clicked');
+      }
       
       // Open GitHub raw download link in new tab
       window.open(downloadUrl, '_blank');
