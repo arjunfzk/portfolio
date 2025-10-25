@@ -20,6 +20,10 @@ yoursite.com/firstname_companyname
 yoursite.com/_companyname
 ```
 
+**Ceaser Cipher instead of plain name**
+'''
+implementation pending
+'''
 #### Examples
 
 **With Name:**
