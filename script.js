@@ -150,6 +150,42 @@
     console.log('✓ Microsoft Clarity initialized with personalization:', personalizationData);
   }
   
+  // Initialize PostHog with personalization context
+  if (typeof posthog !== 'undefined') {
+    // Set user properties for session tracking
+    const posthogProps = {
+      visitor_type: personalizationData.isPersonalized ? 'personalized' : 'organic',
+      url_pattern_type: personalizationData.type,
+      is_personalized: personalizationData.isPersonalized
+    };
+    
+    if (personalizationData.firstname) {
+      posthogProps.firstname = personalizationData.firstname;
+    }
+    if (personalizationData.companyname) {
+      posthogProps.company = personalizationData.companyname;
+    }
+    if (personalizationData.urlPattern) {
+      posthogProps.url_pattern = personalizationData.urlPattern;
+    }
+    
+    // Identify user for session replay filtering
+    if (personalizationData.urlPattern) {
+      posthog.identify(personalizationData.urlPattern, posthogProps);
+    } else {
+      posthog.register(posthogProps);
+    }
+    
+    // Capture initial page view with context
+    posthog.capture('page_view', {
+      ...posthogProps,
+      page_title: document.title,
+      page_path: window.location.pathname
+    });
+    
+    console.log('✓ PostHog initialized with personalization:', personalizationData);
+  }
+  
   // Track section visibility and time spent
   const sectionTimeTracking = new Map();
   const sectionObserver = new IntersectionObserver((entries) => {
@@ -173,6 +209,10 @@
           clarity('event', 'section_view', { section: sectionId });
         }
         
+        if (typeof posthog !== 'undefined') {
+          posthog.capture('section_view', { section: sectionId });
+        }
+        
       } else {
         // Section left viewport - calculate time spent
         const startTime = sectionTimeTracking.get(sectionId);
@@ -190,6 +230,13 @@
           
           if (typeof clarity !== 'undefined') {
             clarity('event', 'section_exit', { 
+              section: sectionId, 
+              time_seconds: timeSpent 
+            });
+          }
+          
+          if (typeof posthog !== 'undefined') {
+            posthog.capture('section_exit', { 
               section: sectionId, 
               time_seconds: timeSpent 
             });
@@ -237,32 +284,58 @@
         if (typeof clarity !== 'undefined') {
           clarity('event', 'scroll_milestone', { percent: threshold });
         }
+        
+        if (typeof posthog !== 'undefined') {
+          posthog.capture('scroll_depth', { percent: threshold });
+        }
       }
     });
   }, { passive: true });
   
-  // Track video interactions
+  // Track video interactions - Optimized for performance
   const trackVideoEvent = (video, eventName, additionalData = {}) => {
+    // Cache DOM queries to avoid repeated lookups
     const videoIndex = video.getAttribute('data-video-index');
     const videoContainer = video.closest('.project-card');
     const projectTitle = videoContainer?.querySelector('h3')?.textContent || 'Unknown';
     
-    // Track via GTM
-    window.dataLayer.push({
-      'event': eventName,
-      'video_index': videoIndex,
-      'project_title': projectTitle,
-      'is_personalized': personalizationData.isPersonalized,
-      'visitor_company': personalizationData.companyname || 'none',
+    // Prepare common data once
+    const commonData = {
+      video_index: videoIndex,
+      project_title: projectTitle,
+      is_personalized: personalizationData.isPersonalized,
+      visitor_company: personalizationData.companyname || 'none',
       ...additionalData
-    });
+    };
     
-    if (typeof clarity !== 'undefined') {
-      clarity('event', eventName, { 
-        video: videoIndex, 
-        project: projectTitle,
-        ...additionalData
+    // Use requestIdleCallback for non-critical tracking to avoid blocking video
+    const trackAnalytics = () => {
+      // Track via GTM
+      window.dataLayer.push({
+        'event': eventName,
+        ...commonData
       });
+      
+      // Track via Clarity (if available)
+      if (typeof clarity !== 'undefined') {
+        clarity('event', eventName, { 
+          video: videoIndex, 
+          project: projectTitle,
+          ...additionalData
+        });
+      }
+      
+      // Track via PostHog (if available)
+      if (typeof posthog !== 'undefined') {
+        posthog.capture(eventName, commonData);
+      }
+    };
+    
+    // Use requestIdleCallback for better performance, fallback to setTimeout
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(trackAnalytics, { timeout: 100 });
+    } else {
+      setTimeout(trackAnalytics, 0);
     }
   };
   
@@ -293,6 +366,13 @@
           text: linkText 
         });
       }
+      
+      if (typeof posthog !== 'undefined') {
+        posthog.capture('outbound_click', { 
+          url: href, 
+          text: linkText 
+        });
+      }
     }
     
     // Track internal navigation
@@ -310,6 +390,10 @@
       if (typeof clarity !== 'undefined') {
         clarity('event', 'internal_nav', { section: sectionId });
       }
+      
+      if (typeof posthog !== 'undefined') {
+        posthog.capture('internal_navigation', { section: sectionId });
+      }
     }
   });
   
@@ -326,18 +410,31 @@
     if (typeof clarity !== 'undefined') {
       clarity('event', 'resume', { action: action });
     }
+    
+    if (typeof posthog !== 'undefined') {
+      posthog.capture('resume_interaction', { action: action });
+    }
   };
   
   // Track session end and send final metrics
   const trackSessionEnd = () => {
+    const sessionDuration = Math.round((Date.now() - performance.timing.navigationStart) / 1000);
+    
     // Track via GTM
     window.dataLayer.push({
       'event': 'session_end',
       'max_scroll_depth': maxScrollDepth,
       'is_personalized': personalizationData.isPersonalized,
       'visitor_company': personalizationData.companyname || 'none',
-      'session_duration': Math.round((Date.now() - performance.timing.navigationStart) / 1000)
+      'session_duration': sessionDuration
     });
+    
+    if (typeof posthog !== 'undefined') {
+      posthog.capture('session_end', {
+        max_scroll_depth: maxScrollDepth,
+        session_duration: sessionDuration
+      });
+    }
   };
   
   // Track when user leaves
@@ -817,11 +914,14 @@
           state.playAttempts = 0; // Reset attempts
           updateLoadingOverlay();
           
-          // Track video play event
+          // Track video play event - Make it non-blocking
           if (typeof window.trackVideoEvent === 'function') {
-              window.trackVideoEvent(video, 'video_play', {
-                  video_state: 'playing'
-              });
+              // Use setTimeout to make tracking asynchronous and non-blocking
+              setTimeout(() => {
+                  window.trackVideoEvent(video, 'video_play', {
+                      video_state: 'playing'
+                  });
+              }, 0);
           }
           
           // Resume background loading after video is stable
@@ -1544,7 +1644,8 @@
     }
     
     resumeModal.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
+    // Fix for Clarity: Only hide vertical overflow, keep horizontal as is
+    document.body.style.overflowY = 'hidden';
     
     // Load PDF when modal opens (if not already loaded)
     if (!pdfDoc) {
@@ -1554,7 +1655,8 @@
 
   const closeResumeModal = () => {
     resumeModal.classList.remove('is-open');
-    document.body.style.overflow = '';
+    // Fix for Clarity: Restore to CSS default (auto)
+    document.body.style.overflowY = '';
     
     // Track resume close
     if (typeof window.trackResumeEvent === 'function') {

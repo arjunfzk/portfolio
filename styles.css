@@ -53,6 +53,7 @@ html {
   scroll-behavior: smooth;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  height: 100%; /* Ensure proper scroll container for analytics */
 }
 
 body {
@@ -64,6 +65,8 @@ body {
   transition: background-color 0.4s var(--ease-2), color 0.4s var(--ease-2);
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto; /* Fix for Clarity scroll tracking - explicitly define vertical scroll */
+  min-height: 100vh; /* Ensure body takes full viewport height */
 }
 
 .background-effects {

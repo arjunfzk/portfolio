@@ -43,6 +43,17 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       })(window, document, "clarity", "script", "tux4favr9y");
     </script>
+    
+    <!-- PostHog Analytics -->
+    <script>
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+      posthog.init('phc_TtzexmAIu9fxmDvdLMThfLWxQkydrnf3XpLlkppvgsx',{api_host:'https://us.i.posthog.com',
+        loaded: function(posthog) {
+          // Enable session recording
+          posthog.startSessionRecording();
+        }
+      })
+    </script>
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
@@ -186,8 +197,8 @@
               </div>
             </article>
 
-            <!-- Portrait Project: Calorie AI Tracker -->
-            <article class="card project-card project-portrait reveal" style="transition-delay: 200ms;">
+            <!-- Landscape Project: RAGScope -->
+            <article class="card project-card project-landscape reveal" style="transition-delay: 200ms;">
               <div class="card-spotlight"></div>
               <div class="project-video-container">
                 <div class="video-loading-overlay">
@@ -197,6 +208,36 @@
                   class="project-video" 
                   data-project-video
                   data-video-index="1"
+                  muted 
+                  loop 
+                  playsinline
+                  preload="none"
+                  webkit-playsinline
+                  x5-playsinline
+                  src="https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/compressed/RagScope.mp4"
+                ></video>
+              </div>
+              <div class="project-content">
+                <h3>RAGScope: Drag and Drop RAG Assistant</h3>
+                <p class="project-subtitle">A Glass-Box RAG Framework for Pipeline Debugging and Visualization</p>
+                <p>A comprehensive RAG framework that exposes every step of the retrieval-augmented generation pipeline—from document ingestion and query embedding to vector retrieval and LLM generation. Built with Python 3.11, FastAPI, and LangChain (LCEL), RAGScope provides real-time visualization of retrieved chunks with similarity scores, latency breakdown across stages, token usage tracking, and cost analysis. Features multi-config support for comparing chunking strategies (Recursive vs Fixed), testing different embedding models, and experimenting with chunk size, overlap, and retrieval parameters to optimize RAG performance.</p>
+                <p class="key-insight"><strong>Key Insight:</strong> Building glass-box visibility into RAG pipelines revealed that 40% of retrieval failures stemmed from suboptimal chunking strategies. Enabling real-time comparison of configurations reduced pipeline debugging time by 85% and cut API costs through intelligent caching and configuration-based optimization.</p>
+                <ul class="project-tags"><li>Python</li><li>FastAPI</li><li>LangChain</li><li>ChromaDB</li><li>GPT-4o-mini</li><li>OpenAI</li></ul>
+                <div class="project-links"></div>
+              </div>
+            </article>
+
+            <!-- Portrait Project: Calorie AI Tracker -->
+            <article class="card project-card project-portrait reveal" style="transition-delay: 400ms;">
+              <div class="card-spotlight"></div>
+              <div class="project-video-container">
+                <div class="video-loading-overlay">
+                  <div class="video-spinner"></div>
+                </div>
+                <video 
+                  class="project-video" 
+                  data-project-video
+                  data-video-index="2"
                   muted 
                   loop 
                   playsinline
@@ -221,7 +262,7 @@
             </article>
 
             <!-- Portrait Project: Get to Know Your Partner -->
-            <article class="card project-card project-portrait reveal" style="transition-delay: 400ms;">
+            <article class="card project-card project-portrait reveal" style="transition-delay: 600ms;">
               <div class="card-spotlight"></div>
               <div class="project-video-container">
                 <div class="video-loading-overlay">
@@ -230,7 +271,7 @@
                 <video 
                   class="project-video" 
                   data-project-video
-                  data-video-index="2"
+                  data-video-index="3"
                   muted 
                   loop 
                   playsinline
@@ -255,7 +296,7 @@
             </article>
 
             <!-- Portrait Project: Texting Story Maker -->
-            <article class="card project-card project-portrait reveal" style="transition-delay: 600ms;">
+            <article class="card project-card project-portrait reveal" style="transition-delay: 800ms;">
               <div class="card-spotlight"></div>
               <div class="project-video-container">
                 <div class="video-loading-overlay">
@@ -264,7 +305,7 @@
                 <video 
                   class="project-video" 
                   data-project-video
-                  data-video-index="3"
+                  data-video-index="4"
                   muted 
                   loop 
                   playsinline
@@ -289,7 +330,7 @@
             </article>
 
             <!-- Portrait Project: Plant Parent -->
-            <article class="card project-card project-portrait reveal" style="transition-delay: 800ms;">
+            <article class="card project-card project-portrait reveal" style="transition-delay: 1000ms;">
               <div class="card-spotlight"></div>
               <div class="project-video-container">
                 <div class="video-loading-overlay">
@@ -298,7 +339,7 @@
                 <video 
                   class="project-video" 
                   data-project-video
-                  data-video-index="4"
+                  data-video-index="5"
                   muted 
                   loop 
                   playsinline
@@ -323,7 +364,7 @@
             </article>
 
             <!-- Portrait Project: Meme Creation Copilot -->
-            <article class="card project-card project-portrait reveal" style="transition-delay: 1000ms;">
+            <article class="card project-card project-portrait reveal" style="transition-delay: 1200ms;">
               <div class="card-spotlight"></div>
               <div class="project-video-container">
                 <div class="video-loading-overlay">
@@ -381,7 +422,7 @@
                 <video 
                   class="project-video" 
                   data-project-video
-                  data-video-index="5"
+                  data-video-index="7"
                   muted 
                   loop 
                   playsinline
