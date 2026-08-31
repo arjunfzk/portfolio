@@ -527,51 +527,54 @@
       const getCompanyLine = () => {
           if (personalization && personalization.type === 'with-name') {
               return {
-                  text: `Ready for enterprise scale at ${personalization.companyname}.`,
-                  html: `Ready for enterprise scale at <span class="personalized-name">${personalization.companyname}</span>.`
+                  text: `Ready to bring production rigor to ${personalization.companyname}.`,
+                  html: `Ready to bring production rigor to <span class="personalized-name">${personalization.companyname}</span>.`
               };
           }
           return null;
       };
-      
+
       // Mobile version - more concise
       const mobileTexts = [
           getGreeting(),
-          personalization ? "I am Arjun." : "I build revenue-generating AI products, solo and end-to-end.",
+          personalization ? "I am Arjun." : "I build production LLM systems + evaluation loops.",
           "",
-          "// Live Portfolio:",
-          "• 10+ Production iOS Apps",
-          "• 4 with Agentic Backends (RAG & Multi-Step Reasoning)",
+          "// Current:",
+          "• LLM engineering at PharmaEdge",
+          "• RAG, orchestration, evals, observability",
           "",
-          "// Core Experience:",
-          "• 1.5+ years building products from scratch solo.",
-          "• 3.5+ years as a Data Scientist at a Startup.",
+          "// Experience:",
+          "• Five years across data science + AI engineering",
+          "• Yes, I've debugged hallucinations at 2am.",
           "",
-          personalization && personalization.type === 'with-name' ? getCompanyLine() : "Proven in startup & solo. Ready for enterprise scale.",
-          "",
-          "↓ Scroll to see the apps in action ↓"
+          personalization && personalization.type === "with-name"
+            ? getCompanyLine()
+            : "Production over demos. Evidence over vibes.",
+          "↓ Scroll to see the systems in action ↓"
       ].filter(item => item !== null); // Remove null items
-      
+
       // Desktop version - detailed
       const desktopTexts = [
           getGreeting(),
           personalization ? "I am Arjun." : "",
           "",
-          "I build AI products that generate revenue. Solo. End-to-end.",
+          "I build production LLM systems—and the evaluation loops that keep them honest.",
           "",
-          "Live Now:",
-          "10 iOS apps. 4 with production agentic backends—LLM orchestration, RAG pipelines, and multi-step reasoning in real user workflows.",
+          "Current:",
+          "At PharmaEdge: RAG, agent orchestration, evaluation, and observability for real-world workflows.",
           "",
           "Background:",
-          "4+ years in Data Science → 1.5 years building products from scratch. Design, development, marketing, deployment, optimization, support. Everything.",
+          "Five years across data science and AI engineering—from forecasting systems to LLM products in production.",
           "",
           "What that means:",
           "• I've debugged hallucinations at 2am.",
-          "• Optimized RAG for actual user queries.",
-          "• I've built and shipped AI systems that people pay for.",
+          "• Built evals that catch regressions before users do.",
+          "• Shipped with latency, cost, failure modes, and messy real-world data in view.",
           "",
-          personalization && personalization.type === 'with-name' ? getCompanyLine() : "I've proven the model solo. Now, I want to tackle challenges at a scale that's impossible alone.",
-          "↓ Scroll to see the apps in action ↓"
+          personalization && personalization.type === "with-name"
+            ? getCompanyLine()
+            : "Production over demos. Evidence over vibes.",
+          "↓ Scroll to see the systems in action ↓"
       ].filter(item => item !== null); // Remove null items
       
       // Choose the appropriate text array based on device
@@ -599,9 +602,10 @@
               }
               
               // Apply section-header class for proper styling calculation
-              if (text === "Live Now:" || text === "Background:" || text === "What that means:" || 
-                  text === "// Live Portfolio:" || text === "// Core Experience:" || 
-                  text === "↓ Scroll to see the apps in action ↓") {
+              // NOTE: must stay in exact sync with the list in typewriter() below
+              if (text === "Current:" || text === "Background:" || text === "What that means:" ||
+                  text === "// Current:" || text === "// Experience:" ||
+                  text === "↓ Scroll to see the systems in action ↓") {
                   outputParas[index].classList.add('section-header');
               }
           });
@@ -645,9 +649,10 @@
                   }
                   
                   // Add section-header class to specific headers
-                  if (text === "Live Now:" || text === "Background:" || text === "What that means:" || 
-                      text === "// Live Portfolio:" || text === "// Core Experience:" || 
-                      text === "↓ Scroll to see the apps in action ↓") {
+                  // NOTE: must stay in exact sync with the list in preCalculateHeight() above
+                  if (text === "Current:" || text === "Background:" || text === "What that means:" ||
+                      text === "// Current:" || text === "// Experience:" ||
+                      text === "↓ Scroll to see the systems in action ↓") {
                       element.classList.add('section-header');
                   }
                   if (onComplete) setTimeout(onComplete, 50); // Faster delay between lines
@@ -1377,9 +1382,9 @@
   let pageRendering = false;
   let pageNumPending = null;
 
-  // Simple approach: iframe for viewing, GitHub for download
-  const pdfViewUrl = 'https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/resume_arjun-8.pdf'; // Cloudflare CDN for viewing
-  const downloadUrl = 'https://pub-896246ffffb148728a685d63cc7960d2.r2.dev/resume_arjun-8.pdf'; // Same URL for download
+  // Same-origin resume asset published at the repo root (see POLISH-PLAN.md step 1)
+  const pdfViewUrl = '/resume.pdf'; // Same-origin path for viewing
+  const downloadUrl = '/resume.pdf'; // Same path for download
 
   // Configure PDF.js worker
   if (typeof pdfjsLib !== 'undefined') {
