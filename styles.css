@@ -7,9 +7,11 @@
   --ease-3: cubic-bezier(0.165, 0.84, 0.44, 1);
   --ease-in-out-quad: cubic-bezier(0.455, 0.03, 0.515, 0.955);
 
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  /* Tightened radius scale: 6 for small controls, 10 for wells/buttons, 14 for cards.
+     --radius-full is reserved for status dots, tags, tenure, and circular buttons. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --radius-full: 999px;
 
   --shadow-sm: 0 4px 12px var(--shadow-color-sm);
@@ -104,14 +106,14 @@ a { color: inherit; text-decoration: none; }
 .navbar {
   display: flex; justify-content: space-between; align-items: center; gap: 24px;
   padding: 10px 24px; border-radius: var(--radius-full);
-  border: 1px solid rgba(198, 161, 91, 0.2);
-  background: linear-gradient(135deg, rgba(27, 24, 20, 0.85) 0%, rgba(18, 16, 14, 0.9) 100%);
+  border: 1px solid var(--border);
+  background: rgba(27, 24, 20, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
   box-shadow: 0 8px 32px var(--shadow-color-md), inset 0 1px 0 rgba(243, 237, 227, 0.05);
   transition: all 0.4s var(--ease-2);
 }
 .navbar:hover {
-  border-color: rgba(198, 161, 91, 0.3);
+  border-color: var(--border-strong);
   box-shadow: 0 8px 32px var(--shadow-color-lg), inset 0 1px 0 rgba(243, 237, 227, 0.08);
 }
 
@@ -123,7 +125,7 @@ a { color: inherit; text-decoration: none; }
   align-items: flex-start; /* Aligns dot with top of text */
 }
 .logo:hover {
-  transform: scale(1.02);
+  color: var(--accent);
 }
 
 .status-dot {
@@ -170,15 +172,17 @@ a { color: inherit; text-decoration: none; }
   transition: all 0.3s var(--ease-1);
 }
 .icon-btn:hover {
-  transform: translateY(-2px); border-color: var(--accent); color: var(--accent);
+  transform: translateY(-1px); border-color: var(--accent); color: var(--accent);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .icon-btn svg { width: 20px; height: 20px; }
 
+/* Button primitives: one filled (.primary-cta) + one quiet outlined (.ghost-cta).
+   Hover changes fill/border and moves at most -1px; focus gets an accent outline. */
 .primary-cta, .ghost-cta {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px 24px; border-radius: var(--radius-full); font-weight: 500; font-size: 0.95rem;
-  border: none; 
+  padding: 12px 24px; border-radius: var(--radius-md); font-weight: 500; font-size: 0.95rem;
+  border: none;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
 }
@@ -188,17 +192,12 @@ a { color: inherit; text-decoration: none; }
   color: var(--accent-ink);
   font-weight: bold;
   box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease-in-out;
-  border: 1px solid rgba(198, 161, 91, 0.4);
 }
 
 .primary-cta:hover {
   background: var(--accent-strong);
   box-shadow: var(--shadow-sm);
-  transform: translateY(-3px) scale(1.03);
-  border-color: rgba(198, 161, 91, 0.6);
+  transform: translateY(-1px);
 }
 
 .ghost-cta {
@@ -208,9 +207,14 @@ a { color: inherit; text-decoration: none; }
 }
 .ghost-cta:hover {
   border-color: var(--accent);
-  color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+}
+
+.primary-cta:focus-visible, .ghost-cta:focus-visible, .icon-btn:focus-visible,
+.expand-btn:focus-visible, .resume-action-btn:focus-visible, .resume-page-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .hamburger-btn, .mobile-nav { display: none; }
@@ -240,9 +244,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--accent);
   transition: all 0.3s var(--ease-1);
-}
-.badge:hover {
-  transform: scale(1.02);
 }
 .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--accent); animation: pulse 2s ease-in-out infinite; }
 
@@ -316,12 +317,15 @@ a { color: inherit; text-decoration: none; }
 .section { padding: clamp(40px, 6vh, 80px) 0; }
 
 .section-intro {
-  max-width: 65ch; margin: 0 auto 64px; text-align: center;
+  max-width: 65ch; margin: 0 auto 48px; text-align: center;
 }
-.section-intro h2 { 
+.section-intro h2 {
   font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
   line-height: 1.2;
-  margin-bottom: 16px; 
+  margin-bottom: 16px;
+  color: var(--text);
+  background: none;
+  text-shadow: none;
 }
 
 .projects-container {
@@ -350,9 +354,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .card:hover {
-  transform: translateY(-12px) scale(1.01);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(198, 161, 91, 0.4);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
 }
 
 .card-spotlight {
@@ -368,11 +372,12 @@ a { color: inherit; text-decoration: none; }
 
 .card:hover .card-spotlight { opacity: 1; }
 
-/* In-focus card styling - indicates which video is currently playing */
+/* In-focus card styling - indicates which video is currently playing.
+   A 2px inset gold marker replaces the old glow halo. */
 .card.in-focus {
-  border-color: rgba(198, 161, 91, 0.6);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px) scale(1.01);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md), inset 0 0 0 2px var(--accent);
+  transform: translateY(-2px);
 }
 
 .card.in-focus .card-spotlight {
@@ -409,8 +414,7 @@ a { color: inherit; text-decoration: none; }
 
 /* Enhanced video container when card is in focus */
 .card.in-focus .project-video-container {
-  border-color: rgba(198, 161, 91, 0.5);
-  box-shadow: 0 4px 20px var(--shadow-color-md);
+  border-color: var(--border-strong);
 }
 
 /* Video loading overlay and spinner */
@@ -439,7 +443,7 @@ a { color: inherit; text-decoration: none; }
 .video-spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid rgba(198, 161, 91, 0.2);
+  border: 3px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: videoSpin 0.8s linear infinite;
@@ -498,7 +502,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .video-speed-banner-line1 {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: "IBM Plex Mono", monospace;
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text);
@@ -509,7 +513,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .video-speed-banner-line2 {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: "IBM Plex Mono", monospace;
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -528,11 +532,11 @@ a { color: inherit; text-decoration: none; }
   font-size: 0.65rem;
 }
 
-/* Smaller text for duration */
+/* Smaller text for duration; small gold accent is the only emphasis */
 .video-speed-banner-duration {
   font-size: 0.65rem;
   font-weight: 500;
-  opacity: 0.9;
+  color: var(--accent);
 }
 
 /* Landscape videos already styled above */
@@ -641,7 +645,6 @@ a { color: inherit; text-decoration: none; }
 .project-tags li:hover {
   background: color-mix(in srgb, var(--accent) 25%, transparent);
   border-color: var(--accent);
-  transform: translateY(-2px);
 }
 .project-links { 
   margin-top: auto; 
@@ -670,12 +673,12 @@ a { color: inherit; text-decoration: none; }
   padding-left: 40px;
 }
 .experience-timeline::before {
-  content: ''; 
+  content: '';
   position: absolute;
-  width: 3px; 
-  background: linear-gradient(180deg, var(--accent) 0%, var(--border) 100%);
-  top: 0; 
-  bottom: 0; 
+  width: 3px;
+  background: var(--border); /* solid neutral rule; the nodes carry the gold */
+  top: 0;
+  bottom: 0;
   left: 0;
 }
 .experience-timeline .experience-card {
@@ -744,8 +747,8 @@ a { color: inherit; text-decoration: none; }
   padding: 8px 16px;
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  color: var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--text);
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.85rem;
   font-weight: 500;
@@ -756,7 +759,7 @@ a { color: inherit; text-decoration: none; }
 .expand-btn:hover {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .expand-icon {
@@ -817,6 +820,19 @@ a { color: inherit; text-decoration: none; }
 
 .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s var(--ease-2), transform 0.8s var(--ease-2); }
 .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+/* Respect reduced-motion preferences: reveal, pulse, scanline, and control motion */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .status-dot, .pulse-dot { animation: none; }
+  .terminal-window::before { animation: none; }
+  .card, .card-spotlight, .primary-cta, .ghost-cta, .icon-btn, .expand-btn,
+  .resume-action-btn, .resume-page-btn, .project-tags li, .nav-links a::after,
+  .navbar { transition: none; }
+  .card:hover, .card.in-focus, .primary-cta:hover, .ghost-cta:hover, .icon-btn:hover,
+  .expand-btn:hover, .resume-action-btn:hover,
+  .resume-page-btn:hover:not(:disabled) { transform: none; }
+}
 
 @media (max-width: 1024px) { 
   .project-portrait {
@@ -1100,8 +1116,8 @@ section[id] {
   height: 100%;
   max-width: 1400px;
   max-height: 95vh;
-  background: linear-gradient(145deg, rgba(27, 24, 20, 0.98) 0%, rgba(18, 16, 14, 0.98) 100%);
-  border-radius: clamp(12px, 2vw, 24px);
+  background: var(--bg-alt);
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(198, 161, 91, 0.2);
   box-shadow:
     0 25px 80px rgba(0, 0, 0, 0.6),
@@ -1137,9 +1153,9 @@ section[id] {
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: linear-gradient(135deg, rgba(198, 161, 91, 0.12) 0%, rgba(213, 181, 112, 0.08) 100%);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   border: 1px solid rgba(198, 161, 91, 0.25);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   color: var(--text);
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.85rem;
@@ -1166,9 +1182,9 @@ section[id] {
   justify-content: center;
   gap: 6px;
   padding: 8px 16px;
-  background: rgba(27, 24, 20, 0.8);
+  background: transparent;
   border: 1px solid var(--border);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   color: var(--text);
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.85rem;
@@ -1190,8 +1206,7 @@ section[id] {
   background: var(--surface-raised);
   border-color: var(--accent);
   color: var(--accent);
-  box-shadow: 0 4px 16px var(--shadow-color-md);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .resume-action-btn:hover svg {
@@ -1246,7 +1261,7 @@ section[id] {
 .resume-loader-spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid rgba(198, 161, 91, 0.2);
+  border: 3px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -1311,7 +1326,7 @@ section[id] {
   background: rgba(18, 16, 14, 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(198, 161, 91, 0.3);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   box-shadow: 0 4px 20px var(--shadow-color-md);
   z-index: 10;
   opacity: 0;
@@ -1340,7 +1355,7 @@ section[id] {
   background: var(--surface-raised);
   border-color: var(--accent);
   color: var(--accent);
-  transform: scale(1.1);
+  transform: translateY(-1px);
 }
 
 .resume-page-btn:disabled {
