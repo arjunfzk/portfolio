@@ -1396,7 +1396,7 @@
     if (typeof pdfjsLib === 'undefined') {
       console.error('PDF.js library not loaded');
       if (resumeLoader) {
-        resumeLoader.innerHTML = '<p style="color: #ef4444;">PDF viewer failed to load. Please use the download button.</p>';
+        resumeLoader.innerHTML = '<p style="color: var(--semantic-danger);">PDF viewer failed to load. Please use the download button.</p>';
       }
       return false;
     }
